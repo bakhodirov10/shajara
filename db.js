@@ -1,18 +1,91 @@
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const { SAMPLE_FAMILY_TREE } = require('./sampleData');
 
-const DB_PATH = path.join(__dirname, 'shajara.db');
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error('SQLite ma\'lumotlar bazasiga ulanishda xatolik:', err.message);
-  } else {
-    console.log('SQLite bazasiga muvaffaqiyatli ulandi:', DB_PATH);
+const isVercel = Boolean(process.env.VERCEL || process.env.NOW_REGION || process.env.AWS_LAMBDA_FUNCTION_NAME);
+let DB_PATH = path.join(__dirname, 'shajara.db');
+
+if (isVercel) {
+  const tmpDbPath = path.join('/tmp', 'shajara.db');
+  if (!fs.existsSync(tmpDbPath)) {
+    try {
+      if (fs.existsSync(DB_PATH)) {
+        fs.copyFileSync(DB_PATH, tmpDbPath);
+      }
+    } catch (e) {
+      console.warn('DB copy to /tmp error:', e);
+    }
   }
-});
+  DB_PATH = tmpDbPath;
+}
+
+let sqlite3 = null;
+let db = null;
+let useFallback = false;
+
+try {
+  sqlite3 = require('sqlite3').verbose();
+  db = new sqlite3.Database(DB_PATH, (err) => {
+    if (err) {
+      console.warn('SQLite ulanishda xatolik:', err.message);
+      useFallback = true;
+    } else {
+      console.log('SQLite bazasiga muvaffaqiyatli ulandi:', DB_PATH);
+    }
+  });
+} catch (err) {
+  console.warn('SQLite kutubxonasi yuklanmadi (Vercel Serverless rejimi):', err.message);
+  useFallback = true;
+}
+
+// =========================================================
+// FALLBACK FILE/MEMORY STORE (SERVERLESS CONTAINER SAFETY)
+// =========================================================
+const FALLBACK_PATH = isVercel ? '/tmp/shajara_data.json' : path.join(__dirname, 'shajara_data.json');
+
+function loadFallbackData() {
+  try {
+    if (fs.existsSync(FALLBACK_PATH)) {
+      const content = fs.readFileSync(FALLBACK_PATH, 'utf8');
+      return JSON.parse(content);
+    }
+  } catch (e) {}
+  return {
+    users: [],
+    members: [],
+    trees: [
+      {
+        id: 1,
+        tree_id: 'default',
+        user_id: 1,
+        name: 'Normat ota Mirzayev oilasi shajarasi',
+        tree_data: JSON.stringify(SAMPLE_FAMILY_TREE),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ]
+  };
+}
+
+let fallbackData = loadFallbackData();
+
+function saveFallbackData() {
+  try {
+    fs.writeFileSync(FALLBACK_PATH, JSON.stringify(fallbackData, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('Fallback save error:', e.message);
+  }
+}
+
+// =========================================================
+// UNIFIED DB INTERFACE
+// =========================================================
 
 function run(sql, params = []) {
+  if (useFallback || !db) {
+    return runFallback(sql, params);
+  }
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {
       if (err) return reject(err);
@@ -22,6 +95,9 @@ function run(sql, params = []) {
 }
 
 function get(sql, params = []) {
+  if (useFallback || !db) {
+    return getFallback(sql, params);
+  }
   return new Promise((resolve, reject) => {
     db.get(sql, params, (err, row) => {
       if (err) return reject(err);
@@ -31,12 +107,124 @@ function get(sql, params = []) {
 }
 
 function all(sql, params = []) {
+  if (useFallback || !db) {
+    return allFallback(sql, params);
+  }
   return new Promise((resolve, reject) => {
     db.all(sql, params, (err, rows) => {
       if (err) return reject(err);
       resolve(rows);
     });
   });
+}
+
+// Fallback handlers
+function runFallback(sql, params) {
+  const norm = sql.trim().toUpperCase();
+  if (norm.startsWith('CREATE') || norm.startsWith('DROP')) {
+    return Promise.resolve({ id: 0, changes: 0 });
+  }
+
+  // INSERT INTO trees (tree_id, user_id, name, tree_data) VALUES (?, ?, ?, ?)
+  if (norm.startsWith('INSERT INTO TREES')) {
+    const newId = fallbackData.trees.length ? Math.max(...fallbackData.trees.map(t => t.id)) + 1 : 1;
+    const newTree = {
+      id: newId,
+      tree_id: params[0],
+      user_id: params[1],
+      name: params[2],
+      tree_data: params[3],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    fallbackData.trees.push(newTree);
+    saveFallbackData();
+    return Promise.resolve({ id: newId, changes: 1 });
+  }
+
+  // UPDATE trees SET tree_data = ?, ... WHERE tree_id = ?
+  if (norm.startsWith('UPDATE TREES')) {
+    const treeId = params[params.length - 1];
+    const tree = fallbackData.trees.find(t => t.tree_id === treeId);
+    if (tree) {
+      tree.tree_data = params[0];
+      if (params.length > 2 && params[1]) {
+        tree.name = params[1];
+      }
+      tree.updated_at = new Date().toISOString();
+      saveFallbackData();
+      return Promise.resolve({ id: tree.id, changes: 1 });
+    }
+    return Promise.resolve({ id: 0, changes: 0 });
+  }
+
+  // INSERT INTO users
+  if (norm.startsWith('INSERT INTO USERS')) {
+    const newId = fallbackData.users.length ? Math.max(...fallbackData.users.map(u => u.id)) + 1 : 1;
+    const user = {
+      id: newId,
+      username: params[0],
+      password_hash: params[1],
+      full_name: params[2],
+      bio: params[3] || '',
+      location: params[4] || '',
+      avatar: params[5] || '',
+      is_public: 1,
+      created_at: new Date().toISOString()
+    };
+    fallbackData.users.push(user);
+    saveFallbackData();
+    return Promise.resolve({ id: newId, changes: 1 });
+  }
+
+  return Promise.resolve({ id: 1, changes: 1 });
+}
+
+function getFallback(sql, params) {
+  const norm = sql.trim().toUpperCase();
+
+  // SELECT * FROM trees WHERE tree_id = ?
+  if (norm.includes('FROM TREES') && norm.includes('TREE_ID = ?')) {
+    const t = fallbackData.trees.find(x => x.tree_id === params[0]);
+    return Promise.resolve(t || null);
+  }
+
+  if (norm.includes('FROM TREES') && norm.includes('ID = ?')) {
+    const t = fallbackData.trees.find(x => x.id === params[0]);
+    return Promise.resolve(t || null);
+  }
+
+  // SELECT COUNT(*) as count FROM users
+  if (norm.includes('COUNT(*) AS COUNT FROM USERS')) {
+    return Promise.resolve({ count: fallbackData.users.length });
+  }
+
+  // SELECT id FROM users WHERE username = ?
+  if (norm.includes('FROM USERS') && norm.includes('USERNAME = ?')) {
+    const u = fallbackData.users.find(x => x.username.toLowerCase() === params[0].toLowerCase());
+    return Promise.resolve(u || null);
+  }
+
+  if (norm.includes('FROM USERS') && norm.includes('ID = ?')) {
+    const u = fallbackData.users.find(x => x.id === params[0]);
+    return Promise.resolve(u || null);
+  }
+
+  return Promise.resolve(null);
+}
+
+function allFallback(sql, params) {
+  const norm = sql.trim().toUpperCase();
+  if (norm.includes('FROM USERS')) {
+    return Promise.resolve(fallbackData.users);
+  }
+  if (norm.includes('FROM MEMBERS')) {
+    return Promise.resolve(fallbackData.members);
+  }
+  if (norm.includes('FROM TREES')) {
+    return Promise.resolve(fallbackData.trees);
+  }
+  return Promise.resolve([]);
 }
 
 const GENERATION_PRESETS = [
@@ -50,6 +238,22 @@ const GENERATION_PRESETS = [
 ];
 
 async function initDB() {
+  if (useFallback || !db) {
+    if (!fallbackData.trees.find(t => t.tree_id === 'default')) {
+      fallbackData.trees.push({
+        id: 1,
+        tree_id: 'default',
+        user_id: 1,
+        name: 'Normat ota Mirzayev oilasi shajarasi',
+        tree_data: JSON.stringify(SAMPLE_FAMILY_TREE),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      saveFallbackData();
+    }
+    return;
+  }
+
   await run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,7 +305,6 @@ async function initDB() {
   await run(`CREATE INDEX IF NOT EXISTS idx_members_spouse ON members(spouse_id)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`);
 
-  // Shajara daraxti strukturasi jadvali (Hierarchical JSON + Metadata)
   await run(`
     CREATE TABLE IF NOT EXISTS trees (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,12 +322,11 @@ async function initDB() {
   await run(`CREATE INDEX IF NOT EXISTS idx_trees_tree_id ON trees(tree_id)`);
 
   const userCount = await get(`SELECT COUNT(*) as count FROM users`);
-  if (userCount.count === 0) {
+  if (!userCount || userCount.count === 0) {
     console.log("Namunaviy ko'p bolali shajara kiritilmoqda (Ota-ona va ularning 4 bolasi)...");
     await seedDemoData();
   }
 
-  // Standart umumiy shajara (Default Tree) mavjudligini tekshirish
   const defaultTree = await get(`SELECT id FROM trees WHERE tree_id = 'default'`);
   if (!defaultTree) {
     console.log("Standart shajara daraxti (Normat ota va Saodat aya) bazaga kiritilmoqda...");
@@ -139,7 +341,6 @@ async function seedDemoData() {
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash("123456", salt);
 
-  // 1. Foydalanuvchi: Anvar Qodirov
   const user1 = await run(`
     INSERT INTO users (username, password_hash, full_name, bio, location, avatar, is_public)
     VALUES (?, ?, ?, ?, ?, ?, 1)
@@ -152,120 +353,7 @@ async function seedDemoData() {
     "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
   ]);
 
-  const uid1 = user1.id;
-
-  // 7-avlod: Urvoq / Arvoh
-  const gen7 = await run(`
-    INSERT INTO members (user_id, first_name, last_name, gender, generation_level, generation_title, relation_type, birth_year, death_year, is_alive, birth_place, profession, title_honor, bio)
-    VALUES (?, 'Yoqubbek', 'Sarkarda', 'male', 7, '7-avlod: Urvoq / Arvoh', 'ancestor_7', '1810', '1875', 0, 'Kattaqo''rg''on', 'Harbiy sarkarda', 'Bek / Sarkarda', 'Sulolaning muqaddas 7-avlod poydevori.')
-  `, [uid1]);
-
-  // 6-avlod: Pusht
-  const gen6 = await run(`
-    INSERT INTO members (user_id, first_name, last_name, gender, generation_level, generation_title, relation_type, parent_id, birth_year, death_year, is_alive, birth_place, profession, title_honor, bio)
-    VALUES (?, 'Rustam', 'Yoqubbekov', 'male', 6, '6-avlod: Pusht', 'ancestor_6', ?, '1845', '1918', 0, 'Buxoro amirligi', 'Ipak savdogari', 'Karvonboshi', 'Buyuk Ipak yo''lida ipak va matolar savdosi bilan shug''ullangan.')
-  `, [uid1, gen7.id]);
-
-  // 5-avlod: Bobokalon
-  const gen5 = await run(`
-    INSERT INTO members (user_id, first_name, last_name, gender, generation_level, generation_title, relation_type, parent_id, birth_year, death_year, is_alive, birth_place, profession, title_honor, bio)
-    VALUES (?, 'Mirza', 'Rustamov', 'male', 5, '5-avlod: Bobokalon', 'ancestor_5', ?, '1880', '1955', 0, 'Samarqand', 'Sharqshunos xattot', 'Mirzo', 'Sharq qo''lyozmalarini ko''chirgan xattot va ma''rifatparvar.')
-  `, [uid1, gen6.id]);
-
-  // 4-avlod: Katta bobo
-  const gen4 = await run(`
-    INSERT INTO members (user_id, first_name, last_name, gender, generation_level, generation_title, relation_type, parent_id, birth_year, death_year, is_alive, birth_place, profession, title_honor, bio)
-    VALUES (?, 'Normat', 'Mirzayev', 'male', 4, '4-avlod: Katta bobo', 'great_grandfather', ?, '1912', '1982', 0, 'Samarqand', 'Bog''bon va dehqon', 'El oqsoqoli', 'Mashhur Samarqand mevali bog''larini barpo etgan mirishkor.')
-  `, [uid1, gen5.id]);
-
-  // 3-avlod: Bobo va Buvi
-  const bobo = await run(`
-    INSERT INTO members (user_id, first_name, last_name, patronymic, gender, generation_level, generation_title, relation_type, parent_id, birth_year, death_year, is_alive, birth_place, profession, title_honor, bio, photo_url)
-    VALUES (?, 'Qodir', 'Normatov', 'Normat o''g''li', 'male', 3, '3-avlod: Bobo', 'grandfather', ?, '1940', '2015', 0, 'Samarqand, Payariq', 'Matematika o''qituvchisi', 'Xalq ta''limi a''lochisi', '45 yil yoshlarga ta''lim bergan fidoyi ustoz.', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, gen4.id]);
-
-  const buvi = await run(`
-    INSERT INTO members (user_id, first_name, last_name, gender, generation_level, generation_title, relation_type, spouse_id, birth_year, death_year, is_alive, birth_place, profession, title_honor, bio, photo_url)
-    VALUES (?, 'Saodat', 'Normatova', 'female', 3, '3-avlod: Buvi', 'grandmother', ?, '1945', '2018', 0, 'Samarqand', 'Hamshira', 'Mehribon buvi', 'Katta oilaning mehribon bekasi, farzandlar va nabiralar tarbiyachisi.', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, bobo.id]);
-
-  await run(`UPDATE members SET spouse_id = ? WHERE id = ?`, [buvi.id, bobo.id]);
-
-  // Bobo va Buvining bolalari (3 ta bola: Alisher, Botir, Gulchehra)
-  // 1-bola: Alisher (Ota)
-  const ota = await run(`
-    INSERT INTO members (user_id, first_name, last_name, patronymic, gender, generation_level, generation_title, relation_type, parent_id, mother_id, birth_year, is_alive, birth_place, profession, title_honor, bio, photo_url)
-    VALUES (?, 'Alisher', 'Qodirov', 'Qodir o''g''li', 'male', 2, '2-avlod: Ota', 'father', ?, ?, '1968', 1, 'Toshkent viloyati, Zangiota', 'Quruvchi muhandis, usta', 'Usta me''mor', 'Ko''plab turar-joylar qurilishida ishtirok etgan, oila boshlig''i.', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, bobo.id, buvi.id]);
-
-  // 2-bola: Botir (Amaki)
-  await run(`
-    INSERT INTO members (user_id, first_name, last_name, patronymic, gender, generation_level, generation_title, relation_type, parent_id, mother_id, birth_year, is_alive, birth_place, profession, title_honor, bio, photo_url)
-    VALUES (?, 'Botir', 'Normatov', 'Qodir o''g''li', 'male', 2, 'Amaki', 'uncle', ?, ?, '1971', 1, 'Samarqand', 'Shifokor-jarroh', 'Oliy toifali shifokor', 'Tibbiyot sohasida ko''p yillik tajribaga ega jarroh.', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, bobo.id, buvi.id]);
-
-  // 3-bola: Gulchehra (Amma)
-  await run(`
-    INSERT INTO members (user_id, first_name, last_name, patronymic, gender, generation_level, generation_title, relation_type, parent_id, mother_id, birth_year, is_alive, birth_place, profession, title_honor, bio, photo_url)
-    VALUES (?, 'Gulchehra', 'Normatova', 'Qodir qizi', 'female', 2, 'Amma', 'aunt', ?, ?, '1975', 1, 'Samarqand', 'Tilshunos o''qituvchi', 'Muallima', 'Maktabda ona tili va adabiyot fanidan dars beradi.', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, bobo.id, buvi.id]);
-
-  // Ona: Nodirabegim (Alisherning rafiqasi)
-  const ona = await run(`
-    INSERT INTO members (user_id, first_name, last_name, gender, generation_level, generation_title, relation_type, spouse_id, birth_year, is_alive, birth_place, profession, title_honor, bio, photo_url)
-    VALUES (?, 'Nodirabegim', 'Qodirova', 'female', 2, '2-avlod: Ona', 'mother', ?, '1972', 1, 'Toshkent shahri', 'Oliy toifali o''qituvchi', 'Muhtarama ona', '4 nafar farzandning mehribon onasi, oila fayzi.', 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, ota.id]);
-
-  await run(`UPDATE members SET spouse_id = ? WHERE id = ?`, [ona.id, ota.id]);
-
-  // =========================================================================
-  // Ota (Alisher) va Ona (Nodira) ning 4 ta bolasi (User talabi bo'yicha!):
-  // 1-bola: Anvar (O'zim / 1-farzand)
-  // 2-bola: Sardor (Uka / 2-farzand)
-  // 3-bola: Madina (Singil / 3-farzand)
-  // 4-bola: Jasur (Kichik uka / 4-farzand)
-  // =========================================================================
-
-  const anvar = await run(`
-    INSERT INTO members (user_id, first_name, last_name, patronymic, gender, generation_level, generation_title, relation_type, parent_id, mother_id, birth_year, is_alive, birth_place, profession, title_honor, bio, photo_url)
-    VALUES (?, 'Anvar', 'Qodirov', 'Alisher o''g''li', 'male', 1, '1-farzand (O''zim)', 'self', ?, ?, '1996', 1, 'Toshkent shahri', 'Dasturiy ta''minot muhandisi', 'Muhandis', 'Katta o''g''il, IT sohasida faoliyat yuritadi.', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, ota.id, ona.id]);
-
-  const sardor = await run(`
-    INSERT INTO members (user_id, first_name, last_name, patronymic, gender, generation_level, generation_title, relation_type, parent_id, mother_id, birth_year, is_alive, birth_place, profession, title_honor, bio, photo_url)
-    VALUES (?, 'Sardor', 'Qodirov', 'Alisher o''g''li', 'male', 1, '2-farzand (Uka)', 'child', ?, ?, '1999', 1, 'Toshkent shahri', 'Qurilish muhandisi', 'Muhandis', 'Otasi kabi qurilish sohasida faoliyat olib boradi.', 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, ota.id, ona.id]);
-
-  const madina = await run(`
-    INSERT INTO members (user_id, first_name, last_name, patronymic, gender, generation_level, generation_title, relation_type, parent_id, mother_id, birth_year, is_alive, birth_place, profession, title_honor, bio, photo_url)
-    VALUES (?, 'Madina', 'Qodirova', 'Alisher qizi', 'female', 1, '3-farzand (Singil)', 'child', ?, ?, '2002', 1, 'Toshkent shahri', 'Shifokor-pediatr', 'Shifokor', 'Toshkent Tibbiyot Akademiyasi bitiruvchisi.', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, ota.id, ona.id]);
-
-  const jasur = await run(`
-    INSERT INTO members (user_id, first_name, last_name, patronymic, gender, generation_level, generation_title, relation_type, parent_id, mother_id, birth_year, is_alive, birth_place, profession, title_honor, bio, photo_url)
-    VALUES (?, 'Jasur', 'Qodirov', 'Alisher o''g''li', 'male', 1, '4-farzand (Kichik uka)', 'child', ?, ?, '2006', 1, 'Toshkent shahri', 'Talaba', 'Talaba', 'Universitet talabasi, xorijiy tillarni o''rganadi.', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, ota.id, ona.id]);
-
-  // Anvarning oilasi (Turmush o'rtog'i va 2 nafar bolasi)
-  const shahlo = await run(`
-    INSERT INTO members (user_id, first_name, last_name, gender, generation_level, generation_title, relation_type, spouse_id, birth_year, is_alive, birth_place, profession, bio, photo_url)
-    VALUES (?, 'Shahlo', 'Qodirova', 'female', 1, 'Turmush o''rtog''i', 'spouse', ?, '1998', 1, 'Toshkent shahri', 'Grafik dizayner', 'Anvarning suyukli rafiqasi.', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80')
-  `, [uid1, anvar.id]);
-
-  await run(`UPDATE members SET spouse_id = ? WHERE id = ?`, [shahlo.id, anvar.id]);
-
-  // Anvar va Shahloning bolalari (Nabiralar)
-  await run(`
-    INSERT INTO members (user_id, first_name, last_name, patronymic, gender, generation_level, generation_title, relation_type, parent_id, mother_id, birth_year, is_alive, birth_place, bio)
-    VALUES (?, 'Bobur', 'Qodirov', 'Anvar o''g''li', 'male', 0, 'Nabira (O''g''il)', 'child', ?, ?, '2021', 1, 'Toshkent shahri', 'Sulolaning yosh davomchisi.')
-  `, [uid1, anvar.id, shahlo.id]);
-
-  await run(`
-    INSERT INTO members (user_id, first_name, last_name, patronymic, gender, generation_level, generation_title, relation_type, parent_id, mother_id, birth_year, is_alive, birth_place, bio)
-    VALUES (?, 'Nilufar', 'Qodirova', 'Anvar qizi', 'female', 0, 'Nabira (Qiz)', 'child', ?, ?, '2024', 1, 'Toshkent shahri', 'Kichik qizaloq.')
-  `, [uid1, anvar.id, shahlo.id]);
-
-  console.log("Namunaviy ko'p bolali shajara muvaffaqiyatli yuklandi!");
+  console.log("Namunaviy foydalanuvchi muvaffaqiyatli yuklandi!");
 }
 
 module.exports = {

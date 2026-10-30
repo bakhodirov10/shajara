@@ -29,6 +29,26 @@ app.use('/api/shajara', shajaraRoutes);
 app.use('/api/explore', exploreRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// DB auto-init middleware (Serverless va an'anaviy rejimlar uchun)
+let isDbInit = false;
+async function ensureDbInit() {
+  if (!isDbInit) {
+    await initDB();
+    isDbInit = true;
+  }
+}
+
+app.use(async (req, res, next) => {
+  if (!isDbInit) {
+    try {
+      await ensureDbInit();
+    } catch (err) {
+      console.error('DB init middleware xatosi:', err);
+    }
+  }
+  next();
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
@@ -43,10 +63,10 @@ app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Serverni ishga tushirish
+// Serverni ishga tushirish (agar bevosita node server.js orqali chaqirilsa)
 async function startServer() {
   try {
-    await initDB();
+    await ensureDbInit();
     app.listen(PORT, () => {
       console.log(`=======================================================`);
       console.log(`  🌳 Shajara.uz - 7 Avlod Milliy Tizimi Serveri`);
@@ -59,4 +79,8 @@ async function startServer() {
   }
 }
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;
