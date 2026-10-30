@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Mening Shajaram — Ota, Ona va Avlodlar Solnomasi</title>
+  <meta name="description" content="Interaktiv, erkin tahrirlanuvchi oila shajarasi: ota, ona (ayoli) va cheksiz farzandlar zanjiri." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            heritage: ['"Cinzel"', 'Georgia', 'serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+              950: '#052e16',
+            },
+            gold: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              200: '#fde68a',
+              300: '#fcd34d',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+              800: '#92400e',
+              900: '#78350f',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- html2canvas for image export -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    /* =========================================================
+       CSS VARIABLES & THEME SETUP
+       ========================================================= */
+    :root {
+      --bg-main: #f8f7f2;
+      --bg-panel: rgba(255, 255, 255, 0.88);
+      --card-bg: #ffffff;
+      --card-border: #e2dfd5;
+      --card-border-hover: #b45309;
+      --text-main: #1c2826;
+      --text-muted: #5e6966;
+      --tree-line: #2d6a4f;
+      --tree-line-width: 2.5px;
+      --connector-gap: 38px;
+      --shadow-card: 0 4px 20px -2px rgba(28, 40, 38, 0.08), 0 2px 6px -1px rgba(28, 40, 38, 0.04);
+      --shadow-card-hover: 0 14px 30px -4px rgba(45, 106, 79, 0.2), 0 4px 10px -2px rgba(45, 106, 79, 0.08);
+    }
+
+    html.dark {
+      --bg-main: #0c1613;
+      --bg-panel: rgba(18, 32, 27, 0.88);
+      --card-bg: #152620;
+      --card-border: #244237;
+      --card-border-hover: #f59e0b;
+      --text-main: #f0f5f2;
+      --text-muted: #95a59f;
+      --tree-line: #10b981;
+      --shadow-card: 0 6px 20px -2px rgba(0, 0, 0, 0.45);
+      --shadow-card-hover: 0 14px 34px -2px rgba(0, 0, 0, 0.65), 0 0 16px rgba(16, 185, 129, 0.22);
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      transition: background-color 0.3s ease, color 0.3s ease;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(45, 106, 79, 0.04) 0%, transparent 25%),
+        radial-gradient(circle at 90% 80%, rgba(217, 119, 6, 0.04) 0%, transparent 25%);
+    }
+
+    html.dark body {
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 35%),
+        radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.04) 0%, transparent 35%);
+    }
+
+    /* =========================================================
+       SEAMLESS CSS FAMILY TREE CONNECTORS
+       ========================================================= */
+    .shajara-canvas {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-width: 100%;
+      width: max-content;
+      padding: 40px 60px 120px 60px;
+      box-sizing: border-box;
+      transform-origin: top center;
+      transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    .tree-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .card-wrapper {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Vertical stem dropping down from parent couple to children */
+    .has-children > .card-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: var(--tree-line-width);
+      height: var(--connector-gap);
+      background-color: var(--tree-line);
+      z-index: 1;
+      border-radius: 1px;
+    }
+
+    /* Container for children row */
+    .tree-children {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      position: relative;
+      margin-top: var(--connector-gap);
+      flex-wrap: nowrap;
+    }
+
+    /* Each child branch */
+    .tree-branch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      padding: var(--connector-gap) 14px 0 14px;
+    }
+
+    /* Vertical drop line down into child couple card */
+    .tree-branch::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: var(--tree-line-width);
+      height: var(--connector-gap);
+      background-color: var(--tree-line);
+      z-index: 1;
+      border-radius: 1px;
+    }
+
+    /* Horizontal branch bar across siblings */
+    .tree-branch::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--tree-line-width);
+      background-color: var(--tree-line);
+      z-index: 1;
+    }
+
+    /* First sibling: line starts at its center */
+    .tree-branch:first-child::after {
+      left: 50%;
+      border-top-left-radius: 4px;
+    }
+
+    /* Last sibling: line ends at its center */
+    .tree-branch:last-child::after {
+      right: 50%;
+      border-top-right-radius: 4px;
+    }
+
+    /* Only child: no horizontal line at all */
+    .tree-branch:only-child::after {
+      display: none;
+    }
+
+    /* =========================================================
+       COUPLE CARD STYLING (ER VA AYOLI)
+       ========================================================= */
+    .person-card {
+      width: 320px;
+      background-color: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      box-shadow: var(--shadow-card);
+      border-radius: 22px;
+      padding: 14px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .person-card:hover {
+      border-color: var(--card-border-hover);
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-3px);
+    }
+
+    .person-card.root-card {
+      border-color: #d97706;
+      background: linear-gradient(180deg, rgba(217, 119, 6, 0.06) 0%, var(--card-bg) 35%);
+    }
+
+    html.dark .person-card.root-card {
+      border-color: #f59e0b;
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, var(--card-bg) 40%);
+    }
+
+    .person-card.highlight-card {
+      border-color: #f59e0b !important;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4), var(--shadow-card-hover) !important;
+      transform: translateY(-4px) scale(1.02);
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+    }
+    html.dark ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(45, 106, 79, 0.3);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(45, 106, 79, 0.6);
+    }
+    html.dark ::-webkit-scrollbar-thumb {
+      background: rgba(16, 185, 129, 0.3);
+    }
+
+    /* Dragging pan styles */
+    .pan-active {
+      cursor: grab;
+      user-select: none;
+    }
+    .pan-active.is-dragging {
+      cursor: grabbing;
+    }
+
+    /* =========================================================
+       PRINT STYLING (@media print)
+       ========================================================= */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .shajara-canvas {
+        padding: 20px !important;
+        transform: none !important;
+      }
+      .person-card {
+        box-shadow: none !important;
+        border: 1.5px solid #000000 !important;
+        page-break-inside: avoid;
+      }
+      .person-card button {
+        display: none !important;
+      }
+      #print-header {
+        display: block !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <!-- =========================================================
+       PRINT HEADER (VISIBLE ONLY IN PRINT / PDF)
+       ========================================================= -->
+  <div id="print-header" class="hidden text-center py-6 border-b-2 border-emerald-800 mb-6">
+    <h1 class="text-3xl font-extrabold font-heritage text-emerald-900 tracking-wider">
+      MENING SHAJARAM
+    </h1>
+    <p class="text-xs text-slate-600 mt-1">Oila va ajdodlar muqaddas sulola daraxti (Ota, Ona va avlodlar)</p>
+    <div id="print-stats-line" class="text-xs text-slate-500 mt-1"></div>
+  </div>
+
+  <!-- =========================================================
+       TOP HEADER & NAVIGATION BAR
+       ========================================================= -->
+  <header class="no-print sticky top-0 z-40 bg-[var(--bg-panel)] backdrop-blur-md border-b border-[var(--card-border)] px-4 sm:px-6 py-3 transition-colors">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center text-white text-xl sm:text-2xl shadow-md shadow-emerald-950/20">
+          🌳
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold font-heritage tracking-wide flex items-center gap-2">
+            <span>Mening shajaram</span>
+            <span id="badge-total-count" class="text-[11px] font-sans font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+              0 aʼzo
+            </span>
+          </h1>
+          <p class="text-[11px] sm:text-xs text-[var(--text-muted)] font-medium">
+            Ota, Ona (ayoli) va cheksiz avlodlar shajarasi
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Search Bar -->
+      <div class="relative flex-1 max-w-xs min-w-[160px] hidden md:block">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Ota, ona yoki farzand ismini izlash..."
+          class="w-full pl-9 pr-7 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 dark:text-white transition-all"
+        />
+        <span class="absolute left-2.5 top-2 text-xs text-slate-400">🔍</span>
+        <button id="search-clear-btn" class="hidden absolute right-2.5 top-1.5 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white">✕</button>
+      </div>
+
+      <!-- Actions & Utilities -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+
+        <!-- Reset to Sample Button -->
+        <button
+          onclick="openResetConfirmModal()"
+          title="Shajarani namunaviy oila holatiga qaytarish"
+          class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 transition-all flex items-center gap-1.5"
+        >
+          <span>↺</span>
+          <span class="hidden sm:inline">Namunaga qaytarish</span>
+        </button>
+
+        <!-- Export Menu Dropdown -->
+        <div class="relative">
+          <button
+            id="export-dropdown-btn"
+            onclick="toggleExportMenu()"
+            class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm transition-all flex items-center gap-1.5"
+          >
+            <span>💾</span>
+            <span class="hidden sm:inline">Eksport / Zaxira</span>
+            <span class="text-[10px]">▼</span>
+          </button>
+          
+          <div
+            id="export-dropdown-menu"
+            class="hidden absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-1.5 z-50 text-xs"
+          >
+            <button onclick="exportToJson()" class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2">
+              <span>📥</span> JSON yuklab olish (Zaxira)
+            </button>
+            <label class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer">
+              <span>📤</span> JSON fayldan tiklash
+              <input type="file" id="import-json-file" accept=".json,application/json" class="hidden" onchange="importFromJson(event)" />
+            </label>
+            <div class="h-px bg-slate-200 dark:bg-slate-800 my-1"></div>
+            <button onclick="exportToImage()" class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2">
+              <span>🖼️</span> Rasm (PNG) yuklash
+            </button>
+            <button onclick="window.print()" class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2">
+              <span>🖨️</span> Chop etish / PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Light / Dark Mode Toggle -->
+        <button
+          onclick="toggleTheme()"
+          id="theme-toggle-btn"
+          title="Mavzuni oʻzgartirish (Kunduzgi / Tungi)"
+          class="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+        >
+          <span id="theme-icon">🌙</span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       INFO & STATS BANNER (SUB-HEADER)
+       ========================================================= -->
+  <div class="no-print bg-emerald-500/5 dark:bg-emerald-950/20 border-b border-emerald-500/10 px-4 py-2 text-xs">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-3 text-[var(--text-muted)]">
+        <span>👑 <strong class="text-[var(--text-main)]" id="stat-root-name">-</strong> bosh ajdodlar</span>
+        <span>•</span>
+        <span>🌿 Chuqurlik: <strong class="text-[var(--text-main)]" id="stat-depth">0</strong> avlod</span>
+        <span class="hidden sm:inline">•</span>
+        <span class="hidden sm:inline text-emerald-600 dark:text-emerald-400">● Ota va Ona juftligidan barcha farzandlar shoxlanadi</span>
+      </div>
+
+      <!-- Quick Zoom Controls -->
+      <div class="flex items-center gap-1">
+        <button onclick="zoomTree(-0.1)" title="Kichiklashtirish" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-xs hover:border-emerald-500 transition-colors">
+          −
+        </button>
+        <span id="zoom-level-text" class="px-2 text-[11px] font-semibold text-slate-600 dark:text-slate-400">100%</span>
+        <button onclick="zoomTree(0.1)" title="Kattalashtirish" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-xs hover:border-emerald-500 transition-colors">
+          +
+        </button>
+        <button onclick="resetZoom()" title="100% holatga qaytarish" class="px-2 h-7 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-[10px] font-bold hover:border-emerald-500 transition-colors">
+          100%
+        </button>
+        <button onclick="centerTree()" title="Bosh ajdodga markazlashtirish" class="px-2 h-7 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-[10px] font-bold hover:border-emerald-500 transition-colors">
+          Markaz
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MAIN TREE VIEWPORT (PAN & ZOOM AREA)
+       ========================================================= -->
+  <main id="viewport-container" class="flex-1 overflow-auto relative pan-active">
+    <div id="tree-canvas" class="shajara-canvas">
+      <!-- Dynamically generated tree with Father and Mother cards renders here -->
+    </div>
+  </main>
+
+  <!-- =========================================================
+       FOOTER
+       ========================================================= -->
+  <footer class="no-print border-t border-[var(--card-border)] py-3 px-4 text-center text-xs text-[var(--text-muted)] bg-[var(--bg-panel)]">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-1.5">
+        <span>🌳</span>
+        <strong>Mening shajaram</strong> — Ota va Ona (ayoli) rishtasi asosidagi milliy genealogiya portali.
+      </div>
+      <div>
+        "Har bir farzand ota va onaning mushtarak qoni va mehridan unib oʻsadi."
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================
+       MODAL 1: ADD CHILD MODAL
+       ========================================================= -->
+  <div id="add-child-modal" class="no-print hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl relative animate-scale-in my-6">
+      
+      <div class="flex items-start justify-between pb-3 border-b border-[var(--card-border)] mb-4">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold font-serif text-[var(--text-main)] flex items-center gap-2">
+            <span>👶</span> Yangi farzand qoʻshish
+          </h3>
+          <p id="add-child-subtitle" class="text-xs text-[var(--text-muted)] mt-0.5"></p>
+        </div>
+        <button onclick="closeAddChildModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg text-lg">✕</button>
+      </div>
+
+      <form id="add-child-form" onsubmit="handleAddChildSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="ac-parent-id" />
+
+        <!-- 1. Farzand ma'lumotlari -->
+        <div class="p-3.5 rounded-2xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 space-y-3">
+          <div class="font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-1.5">
+            <span>🌱</span> Farzand maʼlumotlari
+          </div>
+
+          <div>
+            <label class="block font-bold mb-1 text-[var(--text-main)]">
+              Farzandning toʻliq ismi <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="ac-fullname" required placeholder="Masalan: Anvar Mirzayev" class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-emerald-500 dark:text-white" />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div>
+              <label class="block font-semibold mb-1 text-[var(--text-main)]">Jinsi</label>
+              <select id="ac-gender" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 dark:text-white">
+                <option value="male">Oʻgʻil bola (Erkak)</option>
+                <option value="female">Qiz bola (Ayol)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1 text-[var(--text-main)]">Tugʻilgan yili</label>
+              <input type="number" id="ac-birth-year" placeholder="Masalan: 1985" min="1000" max="2100" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 dark:text-white" />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1 text-[var(--text-main)]">Vafot yili</label>
+              <input type="number" id="ac-death-year" placeholder="Tirik boʻlsa, boʻsh" min="1000" max="2100" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 dark:text-white" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Farzandning turmush o'rtog'i (Ayoli / Eri) -->
+        <div class="p-3.5 rounded-2xl bg-pink-500/5 dark:bg-pink-950/20 border border-pink-500/20 space-y-3">
+          <div class="font-bold text-pink-800 dark:text-pink-400 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <span>💍</span> Farzandning turmush oʻrtogʻi (Ayoli / Eri)
+            </span>
+            <span class="text-[10px] text-slate-400 font-normal">ixtiyoriy</span>
+          </div>
+
+          <div>
+            <label class="block font-semibold mb-1 text-[var(--text-main)]">Turmush oʻrtogʻining ismi (Ayoli / Eri)</label>
+            <input type="text" id="ac-spouse-name" placeholder="Masalan: Shahloxon (boʻydoq boʻlsa, boʻsh qoldiring)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-pink-500 dark:text-white" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-semibold mb-1 text-[var(--text-main)]">Ayolining tugʻilgan yili</label>
+              <input type="number" id="ac-spouse-birth" placeholder="Masalan: 1988" min="1000" max="2100" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-pink-500 dark:text-white" />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1 text-[var(--text-main)]">Ayolining vafot yili</label>
+              <input type="number" id="ac-spouse-death" placeholder="Tirik boʻlsa, boʻsh" min="1000" max="2100" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-pink-500 dark:text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-[var(--card-border)]">
+          <button type="button" onclick="closeAddChildModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">
+            Bekor qilish
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-md shadow-emerald-950/20 transition-all">
+            Saqlash
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 2: EDIT COUPLE MODAL (OTA VA AYOLI TAHRIRI)
+       ========================================================= -->
+  <div id="edit-modal" class="no-print hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl relative animate-scale-in my-6">
+      
+      <div class="flex items-start justify-between pb-3 border-b border-[var(--card-border)] mb-4">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold font-serif text-[var(--text-main)] flex items-center gap-2">
+            <span>✏️</span> Oila va Ayoli maʼlumotlarini tahrirlash
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-0.5">
+            Ota va Ona (ayoli) maʼlumotlarini toʻliq kiriting
+          </p>
+        </div>
+        <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg text-lg">✕</button>
+      </div>
+
+      <form id="edit-form" onsubmit="handleEditSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="edit-target-id" />
+
+        <!-- 1. Asosiy shaxs (Ota / Er) -->
+        <div class="p-3.5 rounded-2xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 space-y-3">
+          <div class="font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-1.5" id="edit-primary-label">
+            <span>👨</span> Ota (Er) maʼlumotlari
+          </div>
+
+          <div>
+            <label class="block font-bold mb-1 text-[var(--text-main)]">
+              Toʻliq ism <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="edit-fullname" required placeholder="Masalan: Normat ota Mirzayev" class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-emerald-500 dark:text-white" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-semibold mb-1 text-[var(--text-main)]">Tugʻilgan yili</label>
+              <input type="number" id="edit-birth-year" placeholder="1930" min="1000" max="2100" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 dark:text-white" />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1 text-[var(--text-main)]">Vafot yili</label>
+              <input type="number" id="edit-death-year" placeholder="2005 (yoki boʻsh)" min="1000" max="2100" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 dark:text-white" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Turmush o'rtog'i (Ayoli / Ona) -->
+        <div class="p-3.5 rounded-2xl bg-pink-500/5 dark:bg-pink-950/20 border border-pink-500/20 space-y-3">
+          <div class="font-bold text-pink-800 dark:text-pink-400 flex items-center justify-between" id="edit-spouse-label">
+            <span class="flex items-center gap-1.5">
+              <span>👩</span> Ayoli (Ona) maʼlumotlari
+            </span>
+            <span class="text-[10px] text-slate-400 font-normal">Turmush oʻrtogʻi</span>
+          </div>
+
+          <div>
+            <label class="block font-semibold mb-1 text-[var(--text-main)]" id="edit-spouse-name-label">
+              Ayolining toʻliq ismi
+            </label>
+            <input type="text" id="edit-spouse-name" placeholder="Masalan: Saodat aya Mirzayeva" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-pink-500 dark:text-white" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-semibold mb-1 text-[var(--text-main)]">Ayolining tugʻilgan yili</label>
+              <input type="number" id="edit-spouse-birth" placeholder="Masalan: 1934" min="1000" max="2100" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-pink-500 dark:text-white" />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1 text-[var(--text-main)]">Ayolining vafot yili</label>
+              <input type="number" id="edit-spouse-death" placeholder="2012 (yoki boʻsh)" min="1000" max="2100" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-pink-500 dark:text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-[var(--card-border)]">
+          <button type="button" onclick="closeEditModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">
+            Bekor qilish
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-md shadow-emerald-950/20 transition-all">
+            Saqlash
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 3: DELETE CONFIRMATION POPUP
+       ========================================================= -->
+  <div id="delete-modal" class="no-print hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[var(--card-bg)] border border-rose-500/30 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative text-center">
+      
+      <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 text-2xl flex items-center justify-center mx-auto mb-3">
+        🗑️
+      </div>
+
+      <h3 class="text-base font-bold font-serif text-[var(--text-main)] mb-1">
+        Shaxs va oilasini oʻchirish
+      </h3>
+
+      <p class="text-xs text-[var(--text-muted)] leading-relaxed mb-4">
+        Haqiqatan ham <strong id="delete-target-name" class="text-[var(--text-main)]">...</strong> va uning barcha avlodlarini shajaradan oʻchirmoqchimisiz?
+      </p>
+
+      <div id="delete-descendants-warning" class="hidden mb-4 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-700 dark:text-amber-400">
+        ⚠️ Diqqat: Ushbu oila bilan birga ularning barcha farzandlari va nabiralari (jami <span id="delete-descendants-count" class="font-bold">0</span> kishi) ham oʻchiriladi!
+      </div>
+
+      <div class="flex items-center justify-center gap-2.5 pt-2 border-t border-[var(--card-border)]">
+        <button
+          type="button"
+          onclick="closeDeleteModal()"
+          class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
+        >
+          Bekor qilish
+        </button>
+        <button
+          type="button"
+          onclick="executeDelete()"
+          class="px-5 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-950/20 transition-all"
+        >
+          Ha, oʻchirilsin
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 4: RESET TO SAMPLE CONFIRMATION POPUP
+       ========================================================= -->
+  <div id="reset-modal" class="no-print hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[var(--card-bg)] border border-amber-500/30 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative text-center">
+      
+      <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-2xl flex items-center justify-center mx-auto mb-3">
+        ↺
+      </div>
+
+      <h3 class="text-base font-bold font-serif text-[var(--text-main)] mb-1">
+        Namunaga qaytarish
+      </h3>
+
+      <p class="text-xs text-[var(--text-muted)] leading-relaxed mb-4">
+        Hozirgi barcha oʻzgarishlar oʻrniga namunaviy toʻliq oila (ota, ona, farzandlar va nabiralar) shajarasi qayta oʻrnatiladi. Davom etasizmi?
+      </p>
+
+      <div class="flex items-center justify-center gap-2.5 pt-2 border-t border-[var(--card-border)]">
+        <button
+          type="button"
+          onclick="closeResetModal()"
+          class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
+        >
+          Bekor qilish
+        </button>
+        <button
+          type="button"
+          onclick="executeResetToSample()"
+          class="px-5 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-950/20 transition-all"
+        >
+          Namunani tiklash
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+       TOAST NOTIFICATION CONTAINER
+       ========================================================= -->
+  <div id="toast-container" class="no-print fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- =========================================================
+       APPLICATION LOGIC SCRIPT
+       ========================================================= -->
+  <script>
+    /**
+     * Shajara.uz — Standalone Client-side Family Tree Web Application
+     * Featuring prominent Father & Mother (Spouse) couple nodes with infinite child lineage.
+     */
+
+    const STORAGE_KEY = 'shajara_family_tree_uz_v2';
+    const THEME_KEY = 'shajara_theme_preference';
+
+    // Rich Sample Family Tree Data with Husband and Wife prominent pairs
+    const SAMPLE_FAMILY_TREE = {
+      id: "p_root",
+      fullName: "Normat ota Mirzayev",
+      birthYear: 1930,
+      deathYear: 2005,
+      gender: "male",
+      spouse: "Saodat aya Mirzayeva",
+      spouseBirthYear: 1934,
+      spouseDeathYear: 2012,
+      children: [
+        {
+          id: "p_alisher",
+          fullName: "Alisher Mirzayev",
+          birthYear: 1956,
+          deathYear: null,
+          gender: "male",
+          spouse: "Nodirabegim Mirzayeva",
+          spouseBirthYear: 1960,
+          spouseDeathYear: null,
+          children: [
+            {
+              id: "p_anvar",
+              fullName: "Anvar Mirzayev",
+              birthYear: 1982,
+              deathYear: null,
+              gender: "male",
+              spouse: "Shahloxon Mirzayeva",
+              spouseBirthYear: 1985,
+              spouseDeathYear: null,
+              children: [
+                {
+                  id: "p_bobur",
+                  fullName: "Bobur Mirzayev",
+                  birthYear: 2010,
+                  deathYear: null,
+                  gender: "male",
+                  spouse: "",
+                  children: []
+                },
+                {
+                  id: "p_nilufar",
+                  fullName: "Nilufar Mirzayeva",
+                  birthYear: 2014,
+                  deathYear: null,
+                  gender: "female",
+                  spouse: "",
+                  children: []
+                }
+              ]
+            },
+            {
+              id: "p_sardor",
+              fullName: "Sardor Mirzayev",
+              birthYear: 1987,
+              deathYear: null,
+              gender: "male",
+              spouse: "Dildoraxon Mirzayeva",
+              spouseBirthYear: 1990,
+              spouseDeathYear: null,
+              children: [
+                {
+                  id: "p_temur",
+                  fullName: "Temurbek Mirzayev",
+                  birthYear: 2018,
+                  deathYear: null,
+                  gender: "male",
+                  spouse: "",
+                  children: []
+                }
+              ]
+            },
+            {
+              id: "p_madina",
+              fullName: "Madina Mirzayeva",
+              birthYear: 1992,
+              deathYear: null,
+              gender: "female",
+              spouse: "Jamshidbek Qosimov",
+              spouseBirthYear: 1989,
+              spouseDeathYear: null,
+              children: []
+            }
+          ]
+        },
+        {
+          id: "p_botir",
+          fullName: "Botir Mirzayev",
+          birthYear: 1961,
+          deathYear: null,
+          gender: "male",
+          spouse: "Gulchehraxon Mirzayeva",
+          spouseBirthYear: 1965,
+          spouseDeathYear: null,
+          children: [
+            {
+              id: "p_farrux",
+              fullName: "Farrux Mirzayev",
+              birthYear: 1989,
+              deathYear: null,
+              gender: "male",
+              spouse: "Ziyodaxon Mirzayeva",
+              spouseBirthYear: 1993,
+              spouseDeathYear: null,
+              children: [
+                {
+                  id: "p_kamron",
+                  fullName: "Kamronbek Mirzayev",
+                  birthYear: 2019,
+                  deathYear: null,
+                  gender: "male",
+                  spouse: "",
+                  children: []
+                }
+              ]
+            },
+            {
+              id: "p_dilorom",
+              fullName: "Dilorom Mirzayeva",
+              birthYear: 1995,
+              deathYear: null,
+              gender: "female",
+              spouse: "",
+              children: []
+            }
+          ]
+        },
+        {
+          id: "p_zuhra",
+          fullName: "Zuhraxon Mirzayeva",
+          birthYear: 1966,
+          deathYear: null,
+          gender: "female",
+          spouse: "Rustambek Shokirov",
+          spouseBirthYear: 1963,
+          spouseDeathYear: null,
+          children: [
+            {
+              id: "p_shahzod",
+              fullName: "Shahzodbek Rustamov",
+              birthYear: 1993,
+              deathYear: null,
+              gender: "male",
+              spouse: "",
+              children: []
+            },
+            {
+              id: "p_malika",
+              fullName: "Malika Rustamova",
+              birthYear: 1998,
+              deathYear: null,
+              gender: "female",
+              spouse: "",
+              children: []
+            }
+          ]
+        }
+      ]
+    };
+
+    // State
+    let treeData = null;
+    let currentZoom = 1;
+    let deleteCandidateId = null;
+
+    // =========================================================
+    // INITIALIZATION
+    // =========================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadTreeData();
+      renderTree();
+      setupPanAndDrag();
+      setupSearch();
+
+      // Close dropdowns on outside click
+      document.addEventListener('click', (e) => {
+        const btn = document.getElementById('export-dropdown-btn');
+        const menu = document.getElementById('export-dropdown-menu');
+        if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+          menu.classList.add('hidden');
+        }
+      });
+
+      // Keyboard escape to close modals
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeAddChildModal();
+          closeEditModal();
+          closeDeleteModal();
+          closeResetModal();
+        }
+      });
+    });
+
+    // =========================================================
+    // THEME HANDLING (LIGHT & DARK MODE)
+    // =========================================================
+    function initTheme() {
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        setTheme('dark');
+      } else {
+        setTheme('light');
+      }
+    }
+
+    function setTheme(mode) {
+      const html = document.documentElement;
+      const icon = document.getElementById('theme-icon');
+      if (mode === 'dark') {
+        html.classList.add('dark');
+        html.classList.remove('light');
+        if (icon) icon.textContent = '☀️';
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        if (icon) icon.textContent = '🌙';
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      setTheme(isDark ? 'light' : 'dark');
+    }
+
+    // =========================================================
+    // STORAGE & PERSISTENCE
+    // =========================================================
+    function loadTreeData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('shajara_family_tree_uz_v1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.id && parsed.fullName && Array.isArray(parsed.children)) {
+            treeData = sortTreeChildrenRecursively(parsed);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Xatolik: saqlangan shajarani oʻqib boʻlmadi', err);
+      }
+      // Fallback to sample
+      treeData = JSON.parse(JSON.stringify(SAMPLE_FAMILY_TREE));
+      sortTreeChildrenRecursively(treeData);
+      saveTreeData();
+    }
+
+    function saveTreeData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(treeData));
+      } catch (err) {
+        console.error('Xatolik: shajarani saqlashda muammo', err);
+        showToast('Saqlashda xatolik yuz berdi (brauzer xotirasi toʻlgan boʻlishi mumkin)', 'error');
+      }
+    }
+
+    // Sort siblings from oldest to youngest (ascending birth year)
+    function sortTreeChildrenRecursively(node) {
+      if (!node) return node;
+      if (Array.isArray(node.children)) {
+        node.children.sort((a, b) => {
+          const yA = a.birthYear ? parseInt(a.birthYear, 10) : 99999;
+          const yB = b.birthYear ? parseInt(b.birthYear, 10) : 99999;
+          if (yA !== yB) return yA - yB;
+          return (a.id || '').localeCompare(b.id || '');
+        });
+        node.children.forEach(child => sortTreeChildrenRecursively(child));
+      }
+      return node;
+    }
+
+    // =========================================================
+    // RECURSIVE HELPERS
+    // =========================================================
+    function findPersonById(node, id) {
+      if (!node) return null;
+      if (node.id === id) return node;
+      if (Array.isArray(node.children)) {
+        for (const child of node.children) {
+          const found = findPersonById(child, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function findParentOf(node, id) {
+      if (!node || !Array.isArray(node.children)) return null;
+      const idx = node.children.findIndex(c => c.id === id);
+      if (idx !== -1) {
+        return { parent: node, index: idx };
+      }
+      for (const child of node.children) {
+        const found = findParentOf(child, id);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function countTotalMembers(node) {
+      if (!node) return 0;
+      let count = 1;
+      if (node.spouse) count += 1;
+      if (Array.isArray(node.children)) {
+        for (const child of node.children) {
+          count += countTotalMembers(child);
+        }
+      }
+      return count;
+    }
+
+    function calculateMaxDepth(node) {
+      if (!node) return 0;
+      if (!Array.isArray(node.children) || node.children.length === 0) return 1;
+      let maxChildDepth = 0;
+      for (const child of node.children) {
+        maxChildDepth = Math.max(maxChildDepth, calculateMaxDepth(child));
+      }
+      return 1 + maxChildDepth;
+    }
+
+    // =========================================================
+    // RENDERING THE TREE WITH FATHER & MOTHER (SPOUSE)
+    // =========================================================
+    function renderTree() {
+      const container = document.getElementById('tree-canvas');
+      if (!container || !treeData) return;
+
+      container.innerHTML = '';
+      const treeDom = renderNodeRecursively(treeData, 1, true);
+      container.appendChild(treeDom);
+
+      updateStats();
+    }
+
+    function renderNodeRecursively(person, generationLevel, isRoot = false) {
+      const hasChildren = Array.isArray(person.children) && person.children.length > 0;
+      const isFemale = person.gender === 'female';
+
+      // Node wrapper
+      const nodeEl = document.createElement('div');
+      nodeEl.className = `tree-node ${hasChildren ? 'has-children' : ''}`;
+      nodeEl.dataset.id = person.id;
+
+      // Card wrapper
+      const cardWrapper = document.createElement('div');
+      cardWrapper.className = 'card-wrapper';
+
+      // Person Card (Couple Card with husband & wife side-by-side)
+      const card = document.createElement('div');
+      card.className = `person-card ${isRoot ? 'root-card' : ''}`;
+      card.id = `card-${person.id}`;
+      card.dataset.name = `${person.fullName || ''} ${person.spouse || ''}`.toLowerCase();
+      card.dataset.birth = `${person.birthYear || ''} ${person.spouseBirthYear || ''}`;
+
+      // Format years
+      function formatYears(b, d) {
+        if (b && d) return `${b} – ${d}`;
+        if (b) return `${b} y.`;
+        if (d) return `vafot: ${d} y.`;
+        return 'Yili nomaʼlum';
+      }
+
+      const primaryYears = formatYears(person.birthYear, person.deathYear);
+      const spouseYears = formatYears(person.spouseBirthYear, person.spouseDeathYear);
+
+      // Card Header
+      const childrenCount = Array.isArray(person.children) ? person.children.length : 0;
+      const cardHeader = `
+        <div class="flex items-center justify-between gap-1 mb-2.5 pb-2 border-b border-[var(--card-border)]">
+          <div class="flex items-center gap-1.5">
+            ${isRoot ? `
+              <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                👑 Bosh ajdodlar
+              </span>
+            ` : `
+              <span class="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] border border-slate-200 dark:border-slate-700">
+                ${generationLevel}-avlod xonadoni
+              </span>
+            `}
+          </div>
+          ${childrenCount > 0 ? `
+            <span class="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full" title="${childrenCount} nafar farzand">
+              🌱 ${childrenCount} farzand
+            </span>
+          ` : `
+            <span class="text-[10px] text-slate-400">Farzandlar hali yoʻq</span>
+          `}
+        </div>
+      `;
+
+      // Labels based on gender
+      const primaryLabel = isFemale ? 'Ona (Qiz)' : 'Ota (Er)';
+      const primaryIcon = isFemale ? '👩' : '👨';
+      const spouseLabel = isFemale ? 'Eri (Kuyov)' : 'Ona (Ayoli)';
+      const spouseIcon = isFemale ? '👨' : '👩';
+
+      // Card Body (Dual Partner Layout)
+      const cardBody = `
+        <div class="grid grid-cols-2 gap-2 relative items-stretch mb-3">
+          
+          <!-- 1. Chap tomon: Asosiy shaxs (Ota yoki Ona) -->
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1">
+                <span>${primaryIcon}</span> ${primaryLabel}
+              </div>
+              <h4 class="text-xs sm:text-[13px] font-bold font-serif text-[var(--text-main)] leading-snug line-clamp-2" title="${escapeHtml(person.fullName)}">
+                ${escapeHtml(person.fullName)}
+              </h4>
+            </div>
+            <div class="text-[10px] text-[var(--text-muted)] mt-2 flex items-center gap-1">
+              <span>📅</span> ${escapeHtml(primaryYears)}
+            </div>
+          </div>
+
+          <!-- O'rtadagi Nikoh Rishtasi Nishoni -->
+          <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-700 dark:text-amber-400 flex items-center justify-center text-[10px] z-10 shadow-sm backdrop-blur-sm" title="Nikoh rishtasi">
+            💍
+          </div>
+
+          <!-- 2. O'ng tomon: Ayoli (Ona) yoki Eri -->
+          ${person.spouse ? `
+            <div class="p-2.5 rounded-xl bg-pink-500/5 dark:bg-pink-950/20 border border-pink-500/25 dark:border-pink-500/35 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-pink-700 dark:text-pink-400 mb-1">
+                  <span>${spouseIcon}</span> ${spouseLabel}
+                </div>
+                <h4 class="text-xs sm:text-[13px] font-bold font-serif text-[var(--text-main)] leading-snug line-clamp-2" title="${escapeHtml(person.spouse)}">
+                  ${escapeHtml(person.spouse)}
+                </h4>
+              </div>
+              <div class="text-[10px] text-[var(--text-muted)] mt-2 flex items-center gap-1">
+                <span>📅</span> ${escapeHtml(spouseYears)}
+              </div>
+            </div>
+          ` : `
+            <div 
+              onclick="openEditModal('${person.id}', true)" 
+              title="Ushbu shaxsga ayolini (turmush oʻrtogʻini) kiritish" 
+              class="p-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-pink-400 dark:hover:border-pink-500 flex flex-col items-center justify-center text-center group cursor-pointer transition-colors bg-slate-50/50 dark:bg-slate-900/30"
+            >
+              <span class="text-sm text-slate-400 group-hover:text-pink-500 transition-colors">💍</span>
+              <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 group-hover:text-pink-600 dark:group-hover:text-pink-400 mt-1">
+                + Ayolini kiritish
+              </span>
+            </div>
+          `}
+
+        </div>
+      `;
+
+      // Card Actions
+      const cardActions = `
+        <div class="pt-2 border-t border-[var(--card-border)] flex items-center justify-between gap-1.5 text-xs">
+          <!-- 1. + Farzand button -->
+          <button
+            onclick="openAddChildModal('${person.id}')"
+            title="Ushbu ota va onaga yangi farzand qoʻshish"
+            class="flex-1 py-1.5 px-2 rounded-xl text-[11px] font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm transition-all flex items-center justify-center gap-1"
+          >
+            <span>+</span> Farzand
+          </button>
+
+          <!-- 2. Tahrir button -->
+          <button
+            onclick="openEditModal('${person.id}')"
+            title="Ota va Ona (ayoli) maʼlumotlarini tahrirlash"
+            class="py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors"
+          >
+            Tahrir
+          </button>
+
+          <!-- 3. Oʻchir button (Root person cannot be deleted) -->
+          ${isRoot ? `
+            <button
+              disabled
+              title="Bosh ajdodni oʻchirib boʻlmaydi, faqat tahrirlash mumkin"
+              class="py-1.5 px-2.5 rounded-xl text-[11px] text-slate-300 dark:text-slate-600 cursor-not-allowed border border-transparent"
+            >
+              🔒
+            </button>
+          ` : `
+            <button
+              onclick="openDeleteConfirmModal('${person.id}')"
+              title="Ushbu shaxs, ayoli va barcha avlodlarini oʻchirish"
+              class="py-1.5 px-2.5 rounded-xl text-[11px] font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors"
+            >
+              Oʻchir
+            </button>
+          `}
+        </div>
+      `;
+
+      card.innerHTML = cardHeader + cardBody + cardActions;
+      cardWrapper.appendChild(card);
+      nodeEl.appendChild(cardWrapper);
+
+      // Recursive Children Row (Branching down from both parents)
+      if (hasChildren) {
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'tree-children';
+
+        person.children.forEach(child => {
+          const branch = document.createElement('div');
+          branch.className = 'tree-branch';
+          const childNode = renderNodeRecursively(child, generationLevel + 1, false);
+          branch.appendChild(childNode);
+          childrenContainer.appendChild(branch);
+        });
+
+        nodeEl.appendChild(childrenContainer);
+      }
+
+      return nodeEl;
+    }
+
+    function updateStats() {
+      const totalMembers = countTotalMembers(treeData);
+      const maxDepth = calculateMaxDepth(treeData);
+
+      const totalBadge = document.getElementById('badge-total-count');
+      if (totalBadge) totalBadge.textContent = `${totalMembers} aʼzo`;
+
+      const statRoot = document.getElementById('stat-root-name');
+      if (statRoot) {
+        statRoot.textContent = treeData?.spouse 
+          ? `${treeData.fullName} va ${treeData.spouse}`
+          : (treeData?.fullName || '-');
+      }
+
+      const statDepth = document.getElementById('stat-depth');
+      if (statDepth) statDepth.textContent = maxDepth;
+
+      const printStats = document.getElementById('print-stats-line');
+      if (printStats) {
+        printStats.textContent = `Bosh ajdodlar: ${treeData?.fullName} va ${treeData?.spouse || ''} • Jami aʼzolar soni: ${totalMembers} kishi • Avlodlar: ${maxDepth} ta • Sana: ${new Date().toLocaleDateString('uz-UZ')}`;
+      }
+    }
+
+    // =========================================================
+    // ADD CHILD MODAL WORKFLOW
+    // =========================================================
+    function openAddChildModal(parentId) {
+      const parent = findPersonById(treeData, parentId);
+      if (!parent) return;
+
+      document.getElementById('ac-parent-id').value = parentId;
+
+      const parentsText = parent.spouse 
+        ? `«${escapeHtml(parent.fullName)} va ${escapeHtml(parent.spouse)}»` 
+        : `«${escapeHtml(parent.fullName)}»`;
+
+      document.getElementById('add-child-subtitle').innerHTML = `${parentsText} oilasiga yangi farzand kiritish:`;
+
+      document.getElementById('add-child-form').reset();
+      document.getElementById('ac-fullname').value = '';
+      document.getElementById('ac-gender').value = 'male';
+      document.getElementById('ac-birth-year').value = '';
+      document.getElementById('ac-death-year').value = '';
+      document.getElementById('ac-spouse-name').value = '';
+      document.getElementById('ac-spouse-birth').value = '';
+      document.getElementById('ac-spouse-death').value = '';
+
+      showModal('add-child-modal');
+      setTimeout(() => document.getElementById('ac-fullname').focus(), 50);
+    }
+
+    function closeAddChildModal() {
+      hideModal('add-child-modal');
+    }
+
+    function handleAddChildSubmit(e) {
+      e.preventDefault();
+
+      const parentId = document.getElementById('ac-parent-id').value;
+      const parent = findPersonById(treeData, parentId);
+      if (!parent) return;
+
+      const fullName = document.getElementById('ac-fullname').value.trim();
+      if (!fullName) {
+        showToast('Iltimos, farzandning toʻliq ismini kiriting!', 'error');
+        return;
+      }
+
+      const gender = document.getElementById('ac-gender').value || 'male';
+      const birthYearVal = document.getElementById('ac-birth-year').value.trim();
+      const deathYearVal = document.getElementById('ac-death-year').value.trim();
+      const spouse = document.getElementById('ac-spouse-name').value.trim();
+      const spouseBirthVal = document.getElementById('ac-spouse-birth').value.trim();
+      const spouseDeathVal = document.getElementById('ac-spouse-death').value.trim();
+
+      const birthYear = birthYearVal ? parseInt(birthYearVal, 10) : null;
+      const deathYear = deathYearVal ? parseInt(deathYearVal, 10) : null;
+      const spouseBirthYear = spouseBirthVal ? parseInt(spouseBirthVal, 10) : null;
+      const spouseDeathYear = spouseDeathVal ? parseInt(spouseDeathVal, 10) : null;
+
+      if (!Array.isArray(parent.children)) {
+        parent.children = [];
+      }
+
+      const newChild = {
+        id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        fullName,
+        gender,
+        birthYear,
+        deathYear,
+        spouse,
+        spouseBirthYear,
+        spouseDeathYear,
+        children: []
+      };
+
+      parent.children.push(newChild);
+      sortTreeChildrenRecursively(treeData);
+      saveTreeData();
+      renderTree();
+      closeAddChildModal();
+      showToast(`«${fullName}» muvaffaqiyatli shajaraga qoʻshildi!`, 'success');
+
+      setTimeout(() => {
+        const newCard = document.getElementById(`card-${newChild.id}`);
+        if (newCard) {
+          newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          newCard.classList.add('highlight-card');
+          setTimeout(() => newCard.classList.remove('highlight-card'), 2200);
+        }
+      }, 150);
+    }
+
+    // =========================================================
+    // EDIT COUPLE MODAL WORKFLOW (ER VA AYOLI TAHRIRI)
+    // =========================================================
+    function openEditModal(personId, focusSpouse = false) {
+      const person = findPersonById(treeData, personId);
+      if (!person) return;
+
+      document.getElementById('edit-target-id').value = personId;
+
+      const isFemale = person.gender === 'female';
+      const primaryLabel = document.getElementById('edit-primary-label');
+      const spouseLabel = document.getElementById('edit-spouse-label');
+      const spouseNameLabel = document.getElementById('edit-spouse-name-label');
+
+      if (primaryLabel) primaryLabel.innerHTML = isFemale ? '<span>👩</span> Ona (Qiz) maʼlumotlari' : '<span>👨</span> Ota (Er) maʼlumotlari';
+      if (spouseLabel) spouseLabel.innerHTML = isFemale ? '<span>👨</span> Eri (Kuyov) maʼlumotlari' : '<span>👩</span> Ayoli (Ona) maʼlumotlari';
+      if (spouseNameLabel) spouseNameLabel.textContent = isFemale ? 'Erining toʻliq ismi' : 'Ayolining toʻliq ismi';
+
+      document.getElementById('edit-fullname').value = person.fullName || '';
+      document.getElementById('edit-birth-year').value = person.birthYear || '';
+      document.getElementById('edit-death-year').value = person.deathYear || '';
+
+      document.getElementById('edit-spouse-name').value = person.spouse || '';
+      document.getElementById('edit-spouse-birth').value = person.spouseBirthYear || '';
+      document.getElementById('edit-spouse-death').value = person.spouseDeathYear || '';
+
+      showModal('edit-modal');
+
+      setTimeout(() => {
+        if (focusSpouse) {
+          document.getElementById('edit-spouse-name').focus();
+        } else {
+          document.getElementById('edit-fullname').focus();
+        }
+      }, 50);
+    }
+
+    function closeEditModal() {
+      hideModal('edit-modal');
+    }
+
+    function handleEditSubmit(e) {
+      e.preventDefault();
+
+      const targetId = document.getElementById('edit-target-id').value;
+      const person = findPersonById(treeData, targetId);
+      if (!person) return;
+
+      const fullName = document.getElementById('edit-fullname').value.trim();
+      if (!fullName) {
+        showToast('Iltimos, toʻliq ismni kiriting!', 'error');
+        return;
+      }
+
+      const birthYearVal = document.getElementById('edit-birth-year').value.trim();
+      const deathYearVal = document.getElementById('edit-death-year').value.trim();
+      const spouse = document.getElementById('edit-spouse-name').value.trim();
+      const spouseBirthVal = document.getElementById('edit-spouse-birth').value.trim();
+      const spouseDeathVal = document.getElementById('edit-spouse-death').value.trim();
+
+      person.fullName = fullName;
+      person.birthYear = birthYearVal ? parseInt(birthYearVal, 10) : null;
+      person.deathYear = deathYearVal ? parseInt(deathYearVal, 10) : null;
+      person.spouse = spouse;
+      person.spouseBirthYear = spouseBirthVal ? parseInt(spouseBirthVal, 10) : null;
+      person.spouseDeathYear = spouseDeathVal ? parseInt(spouseDeathVal, 10) : null;
+
+      sortTreeChildrenRecursively(treeData);
+      saveTreeData();
+      renderTree();
+      closeEditModal();
+      showToast('Oila va ayoli maʼlumotlari muvaffaqiyatli saqlandi!', 'success');
+    }
+
+    // =========================================================
+    // DELETION WORKFLOW WITH CONFIRMATION
+    // =========================================================
+    function openDeleteConfirmModal(personId) {
+      if (treeData && treeData.id === personId) {
+        showToast('Bosh ajdodni oʻchirib boʻlmaydi, faqat tahrirlash mumkin!', 'error');
+        return;
+      }
+
+      const person = findPersonById(treeData, personId);
+      if (!person) return;
+
+      deleteCandidateId = personId;
+
+      const nameEl = document.getElementById('delete-target-name');
+      if (nameEl) {
+        nameEl.textContent = person.spouse 
+          ? `«${person.fullName} va ${person.spouse}»` 
+          : `«${person.fullName}»`;
+      }
+
+      const descendantsCount = countTotalMembers(person) - (person.spouse ? 2 : 1);
+      const warningEl = document.getElementById('delete-descendants-warning');
+      const countEl = document.getElementById('delete-descendants-count');
+
+      if (descendantsCount > 0) {
+        if (countEl) countEl.textContent = descendantsCount;
+        if (warningEl) warningEl.classList.remove('hidden');
+      } else {
+        if (warningEl) warningEl.classList.add('hidden');
+      }
+
+      showModal('delete-modal');
+    }
+
+    function closeDeleteModal() {
+      deleteCandidateId = null;
+      hideModal('delete-modal');
+    }
+
+    function executeDelete() {
+      if (!deleteCandidateId) return;
+
+      const result = findParentOf(treeData, deleteCandidateId);
+      if (!result) {
+        showToast('Xatolik: Shaxsning ota-onasi topilmadi!', 'error');
+        closeDeleteModal();
+        return;
+      }
+
+      const { parent, index } = result;
+      const deletedPerson = parent.children[index];
+      parent.children.splice(index, 1);
+
+      saveTreeData();
+      renderTree();
+      closeDeleteModal();
+      showToast(`«${deletedPerson.fullName}» oilasi shajaradan oʻchirildi.`, 'info');
+    }
+
+    // =========================================================
+    // RESET TO SAMPLE WORKFLOW
+    // =========================================================
+    function openResetConfirmModal() {
+      showModal('reset-modal');
+    }
+
+    function closeResetModal() {
+      hideModal('reset-modal');
+    }
+
+    function executeResetToSample() {
+      treeData = JSON.parse(JSON.stringify(SAMPLE_FAMILY_TREE));
+      sortTreeChildrenRecursively(treeData);
+      saveTreeData();
+      renderTree();
+      closeResetModal();
+      centerTree();
+      showToast('Namunaviy toʻliq oila shajarasi muvaffaqiyatli tiklandi!', 'success');
+    }
+
+    // =========================================================
+    // EXPORT & IMPORT UTILITIES
+    // =========================================================
+    function toggleExportMenu() {
+      const menu = document.getElementById('export-dropdown-menu');
+      if (menu) menu.classList.toggle('hidden');
+    }
+
+    function exportToJson() {
+      toggleExportMenu();
+      try {
+        const jsonStr = JSON.stringify(treeData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const filename = `shajara_${(treeData.fullName || 'oila').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Shajara JSON fayli yuklab olindi!', 'success');
+      } catch (err) {
+        showToast('JSON faylini eksport qilishda xatolik yuz berdi', 'error');
+      }
+    }
+
+    function importFromJson(e) {
+      toggleExportMenu();
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (!parsed || !parsed.id || !parsed.fullName || !Array.isArray(parsed.children)) {
+            throw new Error('Yaroqsiz shajara maʼlumotlari strukturasi');
+          }
+          treeData = sortTreeChildrenRecursively(parsed);
+          saveTreeData();
+          renderTree();
+          centerTree();
+          showToast('Shajara fayldan muvaffaqiyatli tiklandi!', 'success');
+        } catch (err) {
+          showToast('Faylni oʻqishda xatolik: Toʻgʻri shajara JSON faylini tanlang!', 'error');
+        } finally {
+          e.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportToImage() {
+      toggleExportMenu();
+      if (typeof html2canvas === 'undefined') {
+        showToast('html2canvas kutubxonasi yuklanmagan. Iltimos, Chop etish (PDF) tugmasidan foydalaning.', 'info');
+        return;
+      }
+
+      showToast('Rasm tayyorlanmoqda, iltimos kuting...', 'info');
+      const canvasEl = document.getElementById('tree-canvas');
+      const savedTransform = canvasEl.style.transform;
+      canvasEl.style.transform = 'scale(1)';
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const bgColor = isDark ? '#0c1613' : '#f8f7f2';
+
+      setTimeout(() => {
+        html2canvas(canvasEl, {
+          backgroundColor: bgColor,
+          scale: 2,
+          useCORS: true,
+          logging: false
+        }).then(canvas => {
+          canvasEl.style.transform = savedTransform;
+          const imgData = canvas.toDataURL('image/png');
+          const a = document.createElement('a');
+          a.href = imgData;
+          a.download = `shajara_${(treeData.fullName || 'oila').replace(/\s+/g, '_')}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          showToast('Shajara rasmi (PNG) muvaffaqiyatli saqlandi!', 'success');
+        }).catch(err => {
+          canvasEl.style.transform = savedTransform;
+          console.error(err);
+          showToast('Rasm eksportida xatolik yuz berdi. "Chop etish" variantini sinab koʻring.', 'error');
+        });
+      }, 100);
+    }
+
+    // =========================================================
+    // ZOOM, PAN & NAVIGATION
+    // =========================================================
+    function zoomTree(delta) {
+      currentZoom = Math.min(2.0, Math.max(0.4, currentZoom + delta));
+      applyZoom();
+    }
+
+    function resetZoom() {
+      currentZoom = 1;
+      applyZoom();
+      centerTree();
+    }
+
+    function applyZoom() {
+      const canvas = document.getElementById('tree-canvas');
+      if (canvas) {
+        canvas.style.transform = `scale(${currentZoom})`;
+      }
+      const label = document.getElementById('zoom-level-text');
+      if (label) {
+        label.textContent = `${Math.round(currentZoom * 100)}%`;
+      }
+    }
+
+    function centerTree() {
+      const viewport = document.getElementById('viewport-container');
+      const canvas = document.getElementById('tree-canvas');
+      if (viewport && canvas) {
+        const rootCard = canvas.querySelector('.root-card');
+        if (rootCard) {
+          rootCard.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'center' });
+        } else {
+          viewport.scrollLeft = (canvas.scrollWidth - viewport.clientWidth) / 2;
+        }
+      }
+    }
+
+    function setupPanAndDrag() {
+      const viewport = document.getElementById('viewport-container');
+      if (!viewport) return;
+
+      let isDown = false;
+      let startX, startY, scrollLeft, scrollTop;
+
+      viewport.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.person-card') || e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) {
+          return;
+        }
+        isDown = true;
+        viewport.classList.add('is-dragging');
+        startX = e.pageX - viewport.offsetLeft;
+        startY = e.pageY - viewport.offsetTop;
+        scrollLeft = viewport.scrollLeft;
+        scrollTop = viewport.scrollTop;
+      });
+
+      viewport.addEventListener('mouseleave', () => {
+        isDown = false;
+        viewport.classList.remove('is-dragging');
+      });
+
+      viewport.addEventListener('mouseup', () => {
+        isDown = false;
+        viewport.classList.remove('is-dragging');
+      });
+
+      viewport.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - viewport.offsetLeft;
+        const y = e.pageY - viewport.offsetTop;
+        const walkX = (x - startX) * 1.5;
+        const walkY = (y - startY) * 1.5;
+        viewport.scrollLeft = scrollLeft - walkX;
+        viewport.scrollTop = scrollTop - walkY;
+      });
+    }
+
+    // =========================================================
+    // SEARCH & HIGHLIGHTING
+    // =========================================================
+    function setupSearch() {
+      const searchInput = document.getElementById('search-input');
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (!searchInput) return;
+
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim().toLowerCase();
+        if (clearBtn) {
+          clearBtn.classList.toggle('hidden', query.length === 0);
+        }
+        highlightSearchResults(query);
+      });
+
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          searchInput.value = '';
+          clearBtn.classList.add('hidden');
+          highlightSearchResults('');
+          searchInput.focus();
+        });
+      }
+    }
+
+    function highlightSearchResults(query) {
+      const cards = document.querySelectorAll('.person-card');
+      let firstMatch = null;
+
+      cards.forEach(card => {
+        const name = card.dataset.name || '';
+        const birth = card.dataset.birth || '';
+        if (query && (name.includes(query) || birth.includes(query))) {
+          card.classList.add('highlight-card');
+          if (!firstMatch) firstMatch = card;
+        } else {
+          card.classList.remove('highlight-card');
+        }
+      });
+
+      if (firstMatch) {
+        firstMatch.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+
+    // =========================================================
+    // UI HELPERS (MODALS, TOASTS, ESCAPING)
+    // =========================================================
+    function showModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function hideModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const bg = type === 'error' ? 'bg-rose-600' : (type === 'info' ? 'bg-amber-600' : 'bg-emerald-700');
+      toast.className = `flex items-center gap-2 px-4 py-2.5 rounded-2xl shadow-xl text-white ${bg} text-xs font-semibold transform transition-all duration-300 translate-y-3 opacity-0 pointer-events-auto`;
+      toast.innerHTML = `
+        <span>${type === 'error' ? '⚠️' : (type === 'info' ? 'ℹ️' : '✨')}</span>
+        <span>${escapeHtml(message)}</span>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-3', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-3');
+        setTimeout(() => toast.remove(), 350);
+      }, 3500);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
