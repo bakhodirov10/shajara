@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const shajaraRoutes = require('./routes/shajara');
 const exploreRoutes = require('./routes/explore');
 const uploadRoutes = require('./routes/upload');
+const treeRoutes = require('./routes/tree');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 // API Marshrutlar
+app.use('/api/tree', treeRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/shajara', shajaraRoutes);
 app.use('/api/explore', exploreRoutes);

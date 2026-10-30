@@ -1,6 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcryptjs');
+const { SAMPLE_FAMILY_TREE } = require('./sampleData');
 
 const DB_PATH = path.join(__dirname, 'shajara.db');
 const db = new sqlite3.Database(DB_PATH, (err) => {
@@ -100,10 +101,37 @@ async function initDB() {
   await run(`CREATE INDEX IF NOT EXISTS idx_members_spouse ON members(spouse_id)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`);
 
+  // Shajara daraxti strukturasi jadvali (Hierarchical JSON + Metadata)
+  await run(`
+    CREATE TABLE IF NOT EXISTS trees (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tree_id TEXT UNIQUE NOT NULL,
+      user_id INTEGER,
+      name TEXT NOT NULL,
+      tree_data TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  await run(`CREATE INDEX IF NOT EXISTS idx_trees_user ON trees(user_id)`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_trees_tree_id ON trees(tree_id)`);
+
   const userCount = await get(`SELECT COUNT(*) as count FROM users`);
   if (userCount.count === 0) {
     console.log("Namunaviy ko'p bolali shajara kiritilmoqda (Ota-ona va ularning 4 bolasi)...");
     await seedDemoData();
+  }
+
+  // Standart umumiy shajara (Default Tree) mavjudligini tekshirish
+  const defaultTree = await get(`SELECT id FROM trees WHERE tree_id = 'default'`);
+  if (!defaultTree) {
+    console.log("Standart shajara daraxti (Normat ota va Saodat aya) bazaga kiritilmoqda...");
+    await run(`
+      INSERT INTO trees (tree_id, user_id, name, tree_data)
+      VALUES ('default', 1, 'Normat ota Mirzayev oilasi shajarasi', ?)
+    `, [JSON.stringify(SAMPLE_FAMILY_TREE)]);
   }
 }
 

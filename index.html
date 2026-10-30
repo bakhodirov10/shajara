@@ -359,6 +359,28 @@
       <!-- Actions & Utilities -->
       <div class="flex items-center gap-1.5 sm:gap-2">
 
+        <!-- Server Status Indicator -->
+        <div
+          id="server-status-badge"
+          onclick="syncWithBackend(true)"
+          title="Server holati (Bosing: qayta tekshirish)"
+          class="cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 transition-all hover:bg-emerald-500/20"
+        >
+          <span id="server-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="server-status-text" class="hidden md:inline">Serverga ulangan</span>
+        </div>
+
+        <!-- Auth / Profile Button -->
+        <button
+          id="auth-btn"
+          onclick="openAuthModal()"
+          title="Foydalanuvchi hisobi"
+          class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1.5"
+        >
+          <span id="auth-btn-icon">👤</span>
+          <span id="auth-btn-label" class="hidden sm:inline">Kirish</span>
+        </button>
+
         <!-- Reset to Sample Button -->
         <button
           onclick="openResetConfirmModal()"
@@ -427,6 +449,10 @@
         <span>🌿 Chuqurlik: <strong class="text-[var(--text-main)]" id="stat-depth">0</strong> avlod</span>
         <span class="hidden sm:inline">•</span>
         <span class="hidden sm:inline text-emerald-600 dark:text-emerald-400">● Ota va Ona juftligidan barcha farzandlar shoxlanadi</span>
+        <span>•</span>
+        <button onclick="syncWithBackend(true)" title="Server bilan sinxronlash" class="flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
+          <span>🔄</span> <span class="hidden sm:inline">Sinxronlash</span>
+        </button>
       </div>
 
       <!-- Quick Zoom Controls -->
@@ -728,6 +754,88 @@
   </div>
 
   <!-- =========================================================
+       MODAL 5: AUTHENTICATION (KIRISH & RO'YXATDAN O'TISH)
+       ========================================================= -->
+  <div id="auth-modal" class="no-print hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl max-w-sm w-full p-6 shadow-2xl relative text-left">
+      <div class="flex items-center justify-between pb-3 border-b border-[var(--card-border)] mb-4">
+        <h3 class="text-base font-bold font-serif text-[var(--text-main)] flex items-center gap-2">
+          <span>🔐</span> <span id="auth-modal-title">Tizimga kirish</span>
+        </h3>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg text-lg">✕</button>
+      </div>
+
+      <!-- Auth Tabs -->
+      <div id="auth-tabs-bar" class="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 mb-4 text-xs font-semibold">
+        <button id="auth-tab-login" onclick="switchAuthTab('login')" class="flex-1 py-1.5 rounded-lg bg-white dark:bg-slate-700 shadow-sm text-emerald-700 dark:text-emerald-400">
+          Kirish
+        </button>
+        <button id="auth-tab-register" onclick="switchAuthTab('register')" class="flex-1 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          Roʻyxatdan oʻtish
+        </button>
+      </div>
+
+      <!-- Logged-in State Card -->
+      <div id="auth-logged-in-view" class="hidden space-y-4 text-xs">
+        <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+          <div class="font-bold text-[var(--text-main)] text-sm flex items-center gap-2">
+            <span>👤</span> <span id="auth-user-fullname">-</span>
+          </div>
+          <div class="text-[var(--text-muted)] text-[11px] mt-1">
+            Foydalanuvchi: @<span id="auth-user-username">-</span>
+          </div>
+        </div>
+        <p class="text-[11px] text-[var(--text-muted)] leading-relaxed">
+          Siz oʻzingizning shaxsiy shajarangizga ulangansiz. Barcha oʻzgarishlar profilingiz bazasida saqlanmoqda.
+        </p>
+        <div class="pt-2 border-t border-[var(--card-border)]">
+          <button type="button" onclick="handleLogout()" class="w-full py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition-all">
+            Hisobdan chiqish
+          </button>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="auth-login-form" onsubmit="handleLoginSubmit(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold mb-1 text-[var(--text-main)]">Foydalanuvchi nomi</label>
+          <input type="text" id="login-username" required placeholder="Masalan: anvar_qodirov" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 text-[var(--text-main)]" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1 text-[var(--text-main)]">Parol</label>
+          <input type="password" id="login-password" required placeholder="••••••" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 text-[var(--text-main)]" />
+        </div>
+        <div class="p-2 rounded-lg bg-emerald-500/5 dark:bg-emerald-950/20 text-[10px] text-slate-500 dark:text-slate-400">
+          💡 Sinov foydalanuvchisi: <span class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">anvar_qodirov</span> / parol: <span class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">123456</span>
+        </div>
+        <button type="submit" id="login-submit-btn" class="w-full py-2.5 rounded-xl font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm transition-all">
+          Kirish
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="auth-register-form" onsubmit="handleRegisterSubmit(event)" class="hidden space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold mb-1 text-[var(--text-main)]">Toʻliq ism-familiyangiz</label>
+          <input type="text" id="reg-fullname" required placeholder="Masalan: Rustam Karimov" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 text-[var(--text-main)]" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1 text-[var(--text-main)]">Foydalanuvchi nomi (Username)</label>
+          <input type="text" id="reg-username" required placeholder="Masalan: rustam_k" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 text-[var(--text-main)]" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1 text-[var(--text-main)]">Yangi parol (kamida 5 ta belgi)</label>
+          <input type="password" id="reg-password" required placeholder="••••••" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500 text-[var(--text-main)]" />
+        </div>
+        <button type="submit" id="reg-submit-btn" class="w-full py-2.5 rounded-xl font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm transition-all">
+          Roʻyxatdan oʻtish
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
        TOAST NOTIFICATION CONTAINER
        ========================================================= -->
   <div id="toast-container" class="no-print fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
@@ -904,16 +1012,23 @@
       ]
     };
 
-    // State
+    // State & Constants
+    const API_BASE = '/api';
+    const AUTH_TOKEN_KEY = 'shajara_auth_token';
+    const AUTH_USER_KEY = 'shajara_auth_user';
+
     let treeData = null;
     let currentZoom = 1;
     let deleteCandidateId = null;
+    let isServerOnline = false;
+    let currentAuthUser = null;
 
     // =========================================================
     // INITIALIZATION
     // =========================================================
     document.addEventListener('DOMContentLoaded', () => {
       initTheme();
+      checkAuthUser();
       loadTreeData();
       renderTree();
       setupPanAndDrag();
@@ -935,73 +1050,299 @@
           closeEditModal();
           closeDeleteModal();
           closeResetModal();
+          closeAuthModal();
         }
       });
     });
 
     // =========================================================
-    // THEME HANDLING (LIGHT & DARK MODE)
+    // API & SERVER INTEGRATION
     // =========================================================
-    function initTheme() {
-      const savedTheme = localStorage.getItem(THEME_KEY);
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        setTheme('dark');
-      } else {
-        setTheme('light');
+    function getAuthToken() {
+      return localStorage.getItem(AUTH_TOKEN_KEY) || null;
+    }
+
+    async function apiRequest(endpoint, options = {}) {
+      const headers = options.headers || {};
+      const token = getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      if (!options.isFormData && !headers['Content-Type'] && options.body && typeof options.body === 'string') {
+        headers['Content-Type'] = 'application/json';
+      }
+
+      const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
+      const res = await fetch(url, { ...options, headers });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || `Server xatosi: ${res.status}`);
+      }
+      return data;
+    }
+
+    function setServerStatus(online, message) {
+      isServerOnline = online;
+      const dot = document.getElementById('server-status-dot');
+      const text = document.getElementById('server-status-text');
+      const badge = document.getElementById('server-status-badge');
+
+      if (dot) {
+        dot.className = online 
+          ? 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse'
+          : 'w-2 h-2 rounded-full bg-amber-500';
+      }
+      if (text) {
+        text.textContent = message || (online ? 'Serverga ulangan' : 'Oflayn rejim');
+      }
+      if (badge) {
+        badge.className = online
+          ? 'cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 transition-all hover:bg-emerald-500/20'
+          : 'cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 transition-all hover:bg-amber-500/20';
       }
     }
 
-    function setTheme(mode) {
-      const html = document.documentElement;
-      const icon = document.getElementById('theme-icon');
-      if (mode === 'dark') {
-        html.classList.add('dark');
-        html.classList.remove('light');
-        if (icon) icon.textContent = '☀️';
-        localStorage.setItem(THEME_KEY, 'dark');
-      } else {
-        html.classList.remove('dark');
-        html.classList.add('light');
-        if (icon) icon.textContent = '🌙';
-        localStorage.setItem(THEME_KEY, 'light');
-      }
-    }
-
-    function toggleTheme() {
-      const isDark = document.documentElement.classList.contains('dark');
-      setTheme(isDark ? 'light' : 'dark');
-    }
-
-    // =========================================================
-    // STORAGE & PERSISTENCE
-    // =========================================================
-    function loadTreeData() {
+    async function loadTreeData() {
+      // 1. Mahalliy keshdan darhol yuklash (tezkor boshlanish)
       try {
         const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('shajara_family_tree_uz_v1');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && parsed.id && parsed.fullName && Array.isArray(parsed.children)) {
             treeData = sortTreeChildrenRecursively(parsed);
-            return;
           }
         }
       } catch (err) {
-        console.error('Xatolik: saqlangan shajarani oʻqib boʻlmadi', err);
+        console.warn('Lokal keshni o\'qishda xatolik:', err);
       }
-      // Fallback to sample
-      treeData = JSON.parse(JSON.stringify(SAMPLE_FAMILY_TREE));
-      sortTreeChildrenRecursively(treeData);
-      saveTreeData();
+
+      if (!treeData) {
+        treeData = JSON.parse(JSON.stringify(SAMPLE_FAMILY_TREE));
+        sortTreeChildrenRecursively(treeData);
+      }
+
+      renderTree();
+
+      // 2. Serverdan yangi holatni olish
+      await syncWithBackend(false);
     }
 
-    function saveTreeData() {
+    async function syncWithBackend(manual = false) {
+      if (manual) {
+        showToast('Server bilan sinxronlanmoqda...', 'info');
+      }
+      try {
+        const res = await apiRequest('/tree');
+        if (res && res.success && res.tree) {
+          treeData = sortTreeChildrenRecursively(res.tree);
+          saveLocalCache();
+          renderTree();
+          setServerStatus(true, 'Serverga ulangan (SQLite)');
+          if (manual) {
+            showToast('Shajara server bazasidan muvaffaqiyatli yangilandi!', 'success');
+          }
+          return;
+        }
+      } catch (err) {
+        console.warn('Backend serverga ulanmadi:', err.message);
+        setServerStatus(false, 'Oflayn rejim (Mahalliy xotira)');
+        if (manual) {
+          showToast('Serverga ulanib boʻlmadi. Oflayn rejim faol.', 'info');
+        }
+      }
+    }
+
+    function saveLocalCache() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(treeData));
       } catch (err) {
-        console.error('Xatolik: shajarani saqlashda muammo', err);
-        showToast('Saqlashda xatolik yuz berdi (brauzer xotirasi toʻlgan boʻlishi mumkin)', 'error');
+        console.error('Lokal saqlash xatosi:', err);
       }
+    }
+
+    async function saveTreeData(options = {}) {
+      saveLocalCache();
+
+      // Serverga saqlash
+      setServerStatus(true, 'Saqlanmoqda...');
+      try {
+        const res = await apiRequest('/tree', {
+          method: 'PUT',
+          body: JSON.stringify({
+            tree: treeData,
+            name: treeData.spouse ? `${treeData.fullName} va ${treeData.spouse} shajarasi` : `${treeData.fullName} shajarasi`
+          })
+        });
+        const timeStr = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
+        setServerStatus(true, `Serverda saqlandi (${timeStr})`);
+        if (options.toast) {
+          showToast('Server bazasida muvaffaqiyatli saqlandi!', 'success');
+        }
+      } catch (err) {
+        console.warn('Serverga saqlash xatosi:', err.message);
+        setServerStatus(false, 'Oflayn (Brauzerda saqlandi)');
+      }
+    }
+
+    // =========================================================
+    // AUTHENTICATION WORKFLOW
+    // =========================================================
+    function checkAuthUser() {
+      try {
+        const saved = localStorage.getItem(AUTH_USER_KEY);
+        if (saved) {
+          currentAuthUser = JSON.parse(saved);
+        }
+      } catch (e) {}
+
+      updateAuthUI();
+
+      if (getAuthToken()) {
+        apiRequest('/auth/me').then(res => {
+          if (res && res.user) {
+            currentAuthUser = res.user;
+            localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
+            updateAuthUI();
+          }
+        }).catch(() => {
+          handleLogout(false);
+        });
+      }
+    }
+
+    function updateAuthUI() {
+      const label = document.getElementById('auth-btn-label');
+      const icon = document.getElementById('auth-btn-icon');
+      const loggedView = document.getElementById('auth-logged-in-view');
+      const loginForm = document.getElementById('auth-login-form');
+      const regForm = document.getElementById('auth-register-form');
+      const tabsBar = document.getElementById('auth-tabs-bar');
+      const title = document.getElementById('auth-modal-title');
+
+      if (currentAuthUser) {
+        if (label) label.textContent = currentAuthUser.full_name.split(' ')[0] || currentAuthUser.username;
+        if (icon) icon.textContent = '👑';
+        if (loggedView) loggedView.classList.remove('hidden');
+        if (loginForm) loginForm.classList.add('hidden');
+        if (regForm) regForm.classList.add('hidden');
+        if (tabsBar) tabsBar.classList.add('hidden');
+        if (title) title.textContent = 'Mening Profilim';
+
+        const nameEl = document.getElementById('auth-user-fullname');
+        const userEl = document.getElementById('auth-user-username');
+        if (nameEl) nameEl.textContent = currentAuthUser.full_name;
+        if (userEl) userEl.textContent = currentAuthUser.username;
+      } else {
+        if (label) label.textContent = 'Kirish';
+        if (icon) icon.textContent = '👤';
+        if (loggedView) loggedView.classList.add('hidden');
+        if (tabsBar) tabsBar.classList.remove('hidden');
+        switchAuthTab('login');
+      }
+    }
+
+    function openAuthModal() {
+      updateAuthUI();
+      showModal('auth-modal');
+    }
+
+    function closeAuthModal() {
+      hideModal('auth-modal');
+    }
+
+    function switchAuthTab(tab) {
+      const tabLogin = document.getElementById('auth-tab-login');
+      const tabReg = document.getElementById('auth-tab-register');
+      const loginForm = document.getElementById('auth-login-form');
+      const regForm = document.getElementById('auth-register-form');
+      const title = document.getElementById('auth-modal-title');
+
+      if (tab === 'login') {
+        if (tabLogin) tabLogin.className = 'flex-1 py-1.5 rounded-lg bg-white dark:bg-slate-700 shadow-sm text-emerald-700 dark:text-emerald-400';
+        if (tabReg) tabReg.className = 'flex-1 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+        if (loginForm) loginForm.classList.remove('hidden');
+        if (regForm) regForm.classList.add('hidden');
+        if (title) title.textContent = 'Tizimga kirish';
+      } else {
+        if (tabReg) tabReg.className = 'flex-1 py-1.5 rounded-lg bg-white dark:bg-slate-700 shadow-sm text-emerald-700 dark:text-emerald-400';
+        if (tabLogin) tabLogin.className = 'flex-1 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+        if (loginForm) loginForm.classList.add('hidden');
+        if (regForm) regForm.classList.remove('hidden');
+        if (title) title.textContent = 'Yangi hisob yaratish';
+      }
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-submit-btn');
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Kirilmoqda...';
+
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const res = await apiRequest('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ username, password })
+        });
+        localStorage.setItem(AUTH_TOKEN_KEY, res.token);
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
+        currentAuthUser = res.user;
+        updateAuthUI();
+        closeAuthModal();
+        showToast(`Xush kelibsiz, ${res.user.full_name}!`, 'success');
+        await syncWithBackend(false);
+      } catch (err) {
+        showToast(err.message || 'Kirishda xatolik', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    }
+
+    async function handleRegisterSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('reg-submit-btn');
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Yaratilmoqda...';
+
+      const full_name = document.getElementById('reg-fullname').value.trim();
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value;
+
+      try {
+        const res = await apiRequest('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ full_name, username, password })
+        });
+        localStorage.setItem(AUTH_TOKEN_KEY, res.token);
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
+        currentAuthUser = res.user;
+        updateAuthUI();
+        closeAuthModal();
+        showToast(`Hisob yaratildi! Xush kelibsiz, ${res.user.full_name}!`, 'success');
+        await syncWithBackend(false);
+      } catch (err) {
+        showToast(err.message || 'Roʻyxatdan oʻtishda xatolik', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    }
+
+    async function handleLogout(showNotification = true) {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(AUTH_USER_KEY);
+      currentAuthUser = null;
+      updateAuthUI();
+      closeAuthModal();
+      if (showNotification) {
+        showToast('Hisobdan chiqildi', 'info');
+      }
+      await syncWithBackend(false);
     }
 
     // Sort siblings from oldest to youngest (ascending birth year)
