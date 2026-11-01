@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { initDB } = require('./db');
+const { initDB, getDbInfo } = require('./db');
 
 const authRoutes = require('./routes/auth');
 const shajaraRoutes = require('./routes/shajara');
@@ -51,9 +51,11 @@ app.use(async (req, res, next) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
+  const dbInfo = typeof getDbInfo === 'function' ? getDbInfo() : null;
   res.json({
     status: 'ok',
     system: 'Shajara.uz - 7 Avlod Milliy Tizimi',
+    database: dbInfo,
     timestamp: new Date().toISOString()
   });
 });
@@ -67,10 +69,15 @@ app.use((req, res) => {
 async function startServer() {
   try {
     await ensureDbInit();
+    const dbInfo = typeof getDbInfo === 'function' ? getDbInfo() : { name: 'DB' };
     app.listen(PORT, () => {
       console.log(`=======================================================`);
       console.log(`  🌳 Shajara.uz - 7 Avlod Milliy Tizimi Serveri`);
       console.log(`  🚀 Sayt manzili: http://localhost:${PORT}`);
+      console.log(`  🗄️  Ma'lumotlar bazasi: ${dbInfo.name}`);
+      if (dbInfo.warning) {
+        console.log(`  ⚠️  ${dbInfo.warning}`);
+      }
       console.log(`=======================================================`);
     });
   } catch (err) {

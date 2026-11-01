@@ -8,10 +8,11 @@ Foydalanuvchi oʻz ajdodlari va avlodlari zanjirini cheksiz kiritishi, har bir o
 
 ## ✨ Asosiy Imkoniyatlar
 
-1. **🔗 Kuchli Backend va Maʼlumotlar Bazasi (Node.js + Express + SQLite)**:
-   - **Avtomatik sinxronizatsiya**: Har bir qoʻshilgan farzand, tahrir va oʻzgarish toʻgʻridan-toʻgʻri SQLite bazasidagi `trees` va `members` jadvallariga saqlanadi.
-   - **Oflayn rejim zaxirasi**: Agar serverga ulanish vaqtincha uzilsa, ilova brauzer xotirasi (`localStorage`) orqali toʻxtovsiz ishlaydi va server qayta ulanganda sinxronlashadi.
-   - **Server holati indikatori**: Sahifada real vaqtda server holati (🟢 Serverga ulangan / 🟡 Oflayn rejim / 🔄 Saqlanmoqda) aks etadi.
+1. **🔗 Kuchli Backend va Maʼlumotlar Bazasi (Node.js + Express + PostgreSQL / SQLite)**:
+   - **Doimiy Bulut Bazasi (Real Cloud Database)**: PostgreSQL (Neon, Supabase, Railway, Vercel Postgres) yoki Turso orqali 100% ishonchli, serverless muhitda ham hech qachon o'chib ketmaydigan doimiy saqlash.
+   - **Avtomatik sinxronizatsiya**: Har bir qoʻshilgan farzand, tahrir va oʻzgarish toʻgʻridan-toʻgʻri bazadagi `trees`, `users` va `members` jadvallariga saqlanadi.
+   - **Lokal va Oflayn moslashuvchanlik**: Agar bulut bazasi ko'rsatilmasa, ilova lokal `shajara.db` orqali ishlaydi. Serverga ulanish uzilsa, `localStorage` zaxirasi ishga tushadi.
+   - **Server va Baza holati indikatori**: Sahifada real vaqtda server va ulanish holati (🟢 Serverga ulangan (PostgreSQL) / 🟡 Oflayn rejim / 🔄 Saqlanmoqda) aks etadi.
 
 2. **👤 Foydalanuvchilar va Shaxsiy Shajaralar**:
    - **Mehmon rejimi (Guest)**: Roʻyxatdan oʻtmasdan darhol umumiy shajarani koʻrish va tahrirlash imkoniyati.
@@ -69,7 +70,27 @@ npm run test:e2e
 
 ---
 
-## 📡 Backend API Marshrutlari
+## 🗄️ Real Database (PostgreSQL / Neon / Supabase) Sozlash
+
+Vercel yoki boshqa Serverless platformalarda SQLite fayli (`/tmp`) server uxlaganda o'chib ketmasligi uchun doimiy PostgreSQL bazasi ulanadi:
+
+### 1. Bepul PostgreSQL bazasi ochish:
+- [Neon.tech](https://neon.tech) (tavsiya: 30 soniyada bepul serverless PostgreSQL beradi) yoki [Supabase.com](https://supabase.com).
+- Yangi loyiha ochib, berilgan connection string (`DATABASE_URL`) dan nusxa oling.
+
+### 2. Loyihaga kiritish:
+`.env` fayliga yoki Vercel Environment Variables ga qo'shing:
+```env
+DATABASE_URL=postgresql://foydalanuvchi:parol@ep-xyz.eu-central-1.aws.neon.tech/neondb?sslmode=require
+```
+
+### 3. Mavjud SQLite ma'lumotlarini PostgreSQL ga ko'chirish:
+```bash
+npm run db:migrate
+```
+Ushbu buyruq `shajara.db` dagi barcha foydalanuvchilar, daraxtlar va oila a'zolarini yangi PostgreSQL bazangizga to'liq va xatosiz o'tkazadi!
+
+---
 
 | Metod | Marshrut | Tavsif |
 |---|---|---|

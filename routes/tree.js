@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { get, run } = require('../db');
+const { get, run, getDbInfo } = require('../db');
 const { optionalAuth, requireAuth } = require('../middleware/auth');
 const { SAMPLE_FAMILY_TREE } = require('../sampleData');
 
@@ -177,7 +177,8 @@ router.get('/', optionalAuth, async (req, res) => {
       name: row.name,
       updated_at: row.updated_at,
       stats,
-      tree: parsedTree
+      tree: parsedTree,
+      database: typeof getDbInfo === 'function' ? getDbInfo() : null
     });
   } catch (err) {
     console.error('GET /api/tree xatosi:', err);

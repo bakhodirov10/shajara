@@ -27,7 +27,7 @@ router.get('/users', async (req, res) => {
       params.push(searchParam, searchParam, searchParam, searchParam, searchParam);
     }
 
-    sql += ` GROUP BY u.id ORDER BY member_count DESC, u.created_at DESC LIMIT 50`;
+    sql += ` GROUP BY u.id, u.username, u.full_name, u.bio, u.location, u.avatar, u.created_at ORDER BY member_count DESC, u.created_at DESC LIMIT 50`;
 
     const users = await all(sql, params);
     return res.json({ success: true, users });

@@ -1137,7 +1137,10 @@
           treeData = sortTreeChildrenRecursively(res.tree);
           saveLocalCache();
           renderTree();
-          setServerStatus(true, 'Serverga ulangan (SQLite)');
+          const dbLabel = res.database?.isRealDb
+            ? (res.database.type === 'postgres' ? 'PostgreSQL' : 'Turso Cloud')
+            : (res.database?.persistent === false ? 'Vaqtinchalik SQLite' : 'SQLite');
+          setServerStatus(true, `Serverga ulangan (${dbLabel})`);
           if (manual) {
             showToast('Shajara server bazasidan muvaffaqiyatli yangilandi!', 'success');
           }
